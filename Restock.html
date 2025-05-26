@@ -2,40 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
   <title>Restock Alerts</title>
-  <style>
-    /* Reset & base */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f4f8; color: #333; padding: 1rem; }
-    h1 { text-align: center; margin-bottom: 1rem; font-size: 1.8rem; color: #2c3e50; }
 
-    /* Card grid */
-    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  <!-- PWA manifest & icons -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0e6cfb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Restock">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --card-bg: #fff;
+      --text: #333;
+      --primary: #16a085;
+      --warn: #c0392b;
+      --shadow: rgba(0,0,0,0.1);
+    }
+    html, body {
+      margin: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      overflow-x: hidden;
+      position: relative;
+    }
+    a.menu-link {
+      position: absolute;
+      top: env(safe-area-inset-top, 10px);
+      left: env(safe-area-inset-left, 10px);
+      font-size: 1.5rem;
+      text-decoration: none;
+      color: var(--text);
+    }
+    h1 {
+      text-align: center;
+      margin: 1rem 0;
+      font-size: 1.8rem;
+      color: #2c3e50;
+    }
+    .grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin: 0 1rem 2rem;
+    }
     .card {
-      background: #fff;
+      background: var(--card-bg);
       border-radius: 8px;
       padding: 1rem;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 8px var(--shadow);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: transform 0.2s;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .card:hover { transform: translateY(-4px); }
-
-    .card h2 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #34495e; }
-    .info { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
-    .label { font-weight: 600; }
-    .value { color: #16a085; }
-    .threshold { color: #c0392b; }
-
-    /* No items */
-    .empty { text-align: center; font-size: 1rem; color: #777; margin-top: 2rem; }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px var(--shadow);
+    }
+    .card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: #34495e;
+    }
+    .info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .label {
+      font-weight: 600;
+    }
+    .value {
+      color: var(--primary);
+    }
+    .threshold {
+      color: var(--warn);
+    }
+    .empty {
+      text-align: center;
+      font-size: 1rem;
+      color: #777;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
+  <!-- Back to dashboard/menu -->
+  <a class="menu-link" href="?page=index" aria-label="Back to Menu">☰</a>
+
   <h1>Restock Alerts</h1>
+
   <? if (alertItems && alertItems.length) { ?>
     <div class="grid">
       <? alertItems.forEach(item => { ?>
@@ -57,7 +123,19 @@
       <? }); ?>
     </div>
   <? } else { ?>
-    <p class="empty">All stocked items are above threshold. No restock needed!</p>
+    <p class="empty">
+      All stocked items are above threshold. No restock needed!
+    </p>
   <? } ?>
+
+  <!-- Register service worker for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('sw.js', { scope: './' })
+        .then(() => console.log('Service Worker registered'))
+        .catch(e => console.error('SW registration failed', e));
+    }
+  </script>
 </body>
 </html>
