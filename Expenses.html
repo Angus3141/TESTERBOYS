@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Expenses Tracker</title>
+<style>
+html, body { margin:0; padding:0; overflow:hidden; }
+body { font-family:Arial,sans-serif; background:#f9f9f9; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); box-sizing:border-box; }
+form { margin:0 5px; padding:0.5rem; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.1); border-radius:8px; display:flex; flex-direction:column; height:calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y:auto; }
+h1 { text-align:center; font-size:1.5rem; margin:0 0 0.5rem; }
+.switch-group { display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.5rem; }
+.switch { position:relative; width:50px; height:25px; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; inset:0; background:#ccc; border-radius:25px; transition:.4s; }
+.slider:before { position:absolute; content:''; height:21px; width:21px; left:2px; bottom:2px; background:#fff; border-radius:50%; transition:.4s; }
+input:checked + .slider { background:#28a745; }
+input:checked + .slider:before { transform:translateX(25px); }
+label { font-size:1rem; }
+#entryContainer { display:flex; flex-direction:column; gap:0.25rem; }
+.entryRow { display:grid; grid-template-columns:1fr auto auto; gap:0.25rem; align-items:center; }
+select, .amountInput { font-size:1rem; border:1px solid #ccc; border-radius:4px; padding:0.25rem; background:#fff; box-sizing:border-box; min-width:0; appearance:none; -webkit-appearance:none; }
+.amountInput { width:4rem; }
+.removeBtn { width:1.5rem; background:transparent; font-size:1rem; border:none; cursor:pointer; }
+.buttonGroup { display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem; }
+.buttonGroup button { padding:0.5rem; font-size:1rem; border:none; border-radius:4px; cursor:pointer; }
+#addEntry { background:#28a745; color:#fff; }
+#submitBtn:disabled { background:#6c757d; color:#fff; cursor:not-allowed; }
+#submitBtn { background:#007bff; color:#fff; }
+#clearBtn { background:#dc3545; color:#fff; }
+</style>
+</head>
+<body>
+<h1>Expenses Tracker</h1>
+<form id="expenseForm" aria-label="Expenses Form">
+  <div class="switch-group">
+    <label class="switch">
+      <input type="checkbox" id="userToggle">
+      <span class="slider"></span>
+    </label>
+    <label id="userLabel">Angus</label>
+  </div>
+  <div id="entryContainer" aria-live="polite"></div>
+  <div class="buttonGroup">
+    <button type="button" id="addEntry">➕ Add Entry</button>
+    <button type="submit" id="submitBtn">✅ Submit</button>
+    <button type="button" id="clearBtn">🧹 Clear</button>
+  </div>
+</form>
+<template id="entryTemplate">
+  <div class="entryRow">
+    <select name="category" required aria-label="Category">
+      <? for (let i = 0; i < categories.length; i++) { ?>
+        <option value="<?= categories[i] ?>"><?= categories[i] ?></option>
+      <? } ?>
+    </select>
+    <input type="number" name="amount" class="amountInput" step="0.01" min="0" required aria-label="Amount">
+    <button type="button" class="removeBtn" aria-label="Remove Entry">✖️</button>
+  </div>
+</template>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('entryContainer');
+  const tpl = document.getElementById('entryTemplate').content;
+  const addBtn = document.getElementById('addEntry');
+  const submitBtn = document.getElementById('submitBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const userToggle = document.getElementById('userToggle');
+  const userLabel = document.getElementById('userLabel');
+  const STORAGE_KEY = 'expensesFormState';
+
+  function saveState() {
+    const rows = Array.from(container.querySelectorAll('.entryRow')).map(row => ({
+      category: row.querySelector('select[name="category"]').value,
+      amount: row.querySelector('input[name="amount"]').value
+    }));
+    const state = { user: userToggle.checked, entries: rows, submitDisabled: submitBtn.disabled };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function addRow(data={}) {
+    const clone = document.importNode(tpl, true);
+    const cat = clone.querySelector('select[name="category"]');
+    const amt = clone.querySelector('input[name="amount"]');
+    const rm = clone.querySelector('.removeBtn');
+    if (data.category) cat.value = data.category;
+    if (data.amount) amt.value = data.amount;
+    cat.addEventListener('change', saveState);
+    amt.addEventListener('input', saveState);
+    rm.addEventListener('click', () => { clone.remove(); if(!container.children.length) addRow(); saveState(); });
+    container.appendChild(clone);
+    saveState();
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const { user, entries, submitDisabled } = JSON.parse(raw);
+        userToggle.checked = user;
+        userLabel.textContent = user ? 'Matthew' : 'Angus';
+        container.innerHTML = '';
+        entries.length ? entries.forEach(addRow) : addRow();
+        submitBtn.disabled = submitDisabled;
+      } catch { container.innerHTML=''; addRow(); }
+    } else addRow();
+  }
+
+  userToggle.addEventListener('change', () => {
+    userLabel.textContent = userToggle.checked ? 'Matthew' : 'Angus';
+    saveState();
+  });
+
+  addBtn.addEventListener('click', () => addRow());
+  clearBtn.addEventListener('click', () => { localStorage.removeItem(STORAGE_KEY); userToggle.checked=false; userLabel.textContent='Angus'; submitBtn.disabled=false; container.innerHTML=''; addRow(); });
+
+  loadState();
+
+  document.getElementById('expenseForm').addEventListener('submit', e => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    saveState();
+    const user = userToggle.checked ? 'Matthew' : 'Angus';
+    const entries = Array.from(container.querySelectorAll('.entryRow')).map(r => ({
+      category: r.querySelector('select[name="category"]').value,
+      amount: parseFloat(r.querySelector('input[name="amount"]').value)
+    }));
+    google.script.run
+      .withSuccessHandler(msg => {
+        alert('Logged!');
+        submitBtn.disabled = false;
+      })
+      .withFailureHandler(err => {
+        alert('Error: ' + err.message);
+        submitBtn.disabled = false;
+      })
+      .processExpenses(user, entries);
+  });
+});
+</script>
+</body>
+</html>
