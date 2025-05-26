@@ -2,73 +2,283 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Dashboard</title>
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+  <title>Inventory Manager</title>
 
-  <!-- PWA bits -->
+  <!-- PWA manifest & icons -->
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0e6cfb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Inventory">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .catch(console.error);
-    }
-  </script>
-
   <style>
-    :root {
-      --bg: #f4f6f8;
-      --card-bg: #fff;
-      --primary: #0e6cfb;
-      --text: #333;
-      --shadow: rgba(0,0,0,0.1);
-    }
-    * { box-sizing: border-box; margin:0; padding:0; }
+    html, body { margin:0; padding:0; overflow:hidden; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: sans-serif;
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 2rem;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: env(safe-area-inset-top) 
+               env(safe-area-inset-right) 
+               env(safe-area-inset-bottom) 
+               env(safe-area-inset-left);
+      box-sizing: border-box;
+      position: relative;
     }
-    .menu {
+    a.menu-link {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      font-size: 1.5rem;
+      text-decoration: none;
+    }
+    form {
+      margin: 0 5px;
+      padding: 0.5rem;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - env(safe-area-inset-top) 
+                         - env(safe-area-inset-bottom));
+      overflow-y: auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin: 0 0 0.5rem;
+    }
+    .action-switch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .switch { position: relative; width: 50px; height: 25px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #ccc; border-radius: 25px;
+      transition: .4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: '';
+      height: 21px; width: 21px;
+      left: 2px; bottom: 2px;
+      background: #fff;
+      border-radius: 50%;
+      transition: .4s;
+    }
+    input:checked + .slider { background: #28a745; }
+    input:checked + .slider:before {
+      transform: translateX(25px);
+    }
+    #actionText {
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+    #stickerContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .stickerEntry {
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
-      gap: 1.5rem; width:100%; max-width:600px;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.25rem;
+      align-items: center;
     }
-    .card {
-      background: var(--card-bg);
-      border-radius: .75rem;
-      box-shadow: 0 4px 12px var(--shadow);
-      text-decoration: none; color: inherit;
-      padding:1.5rem; text-align:center;
-      transition: transform .2s, box-shadow .2s;
+    select, .quantitySelect {
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 0.25rem;
+      background: #fff;
+      box-sizing: border-box;
+      appearance: none;
+      -webkit-appearance: none;
+      min-width: 0;
     }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px var(--shadow);
+    .quantitySelect { width: 3rem; }
+    .removeRow {
+      width: 1.5rem; padding: 0;
+      background: transparent;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
     }
-    .icon { font-size:2.5rem; margin-bottom:.5rem; color:var(--primary); }
-    .label { font-size:1.1rem; font-weight:600; }
+    .buttonGroup {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .buttonGroup button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #addRow { background: #28a745; color: #fff; }
+    #submitBtn { background: #007bff; color: #fff; }
+    #clearBtn { background: #dc3545; color: #fff; }
+    #submitBtn:disabled { background: #6c757d; cursor: not-allowed; }
   </style>
 </head>
 <body>
-  <div class="menu">
-    <a class="card" href="index.html?page=inventory">
-      <div class="icon">📦</div>
-      <div class="label">Inventory</div>
-    </a>
-    <a class="card" href="index.html?page=expenses">
-      <div class="icon">💸</div>
-      <div class="label">Expenses</div>
-    </a>
-    <a class="card" href="index.html?page=restock">
-      <div class="icon">🔄</div>
-      <div class="label">Restock</div>
-    </a>
-  </div>
+  <!-- Back to dashboard/menu -->
+  <a class="menu-link" href="?page=index" aria-label="Back to Menu">☰</a>
+
+  <h1>Inventory Manager</h1>
+  <form id="shipmentForm" aria-label="Shipment Form">
+    <div class="action-switch">
+      <label class="switch">
+        <input type="checkbox" id="actionToggle">
+        <span class="slider"></span>
+      </label>
+      <span id="actionText">Stock Out</span>
+    </div>
+    <div id="stickerContainer" aria-live="polite"></div>
+    <div class="buttonGroup">
+      <button type="button" id="addRow">➕ Add Sticker</button>
+      <button type="submit" id="submitBtn">✅ Submit</button>
+      <button type="button" id="clearBtn">🧹 Clear</button>
+    </div>
+  </form>
+
+  <template id="stickerEntryTemplate">
+    <div class="stickerEntry">
+      <select name="sticker" required aria-label="Sticker selection">
+        <? for (let i = 0; i < stickers.length; i++) { ?>
+          <option value="<?= stickers[i] ?>"><?= stickers[i] ?></option>
+        <? } ?>
+      </select>
+      <select name="quantity" class="quantitySelect" required aria-label="Quantity selector">
+        <? for (let q = 1; q <= 100; q++) { ?>
+          <option value="<?= q ?>"><?= q ?></option>
+        <? } ?>
+      </select>
+      <button type="button" class="removeRow" aria-label="Remove Sticker Row">✖️</button>
+    </div>
+  </template>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const STORAGE_KEY = 'inventoryFormState';
+      const container = document.getElementById('stickerContainer');
+      const tpl = document.getElementById('stickerEntryTemplate').content;
+      const actionToggle = document.getElementById('actionToggle');
+      const actionText = document.getElementById('actionText');
+      const addBtn = document.getElementById('addRow');
+      const submitBtn = document.getElementById('submitBtn');
+      const clearBtn = document.getElementById('clearBtn');
+
+      function saveState() {
+        const entries = Array.from(container.querySelectorAll('.stickerEntry')).map(entry => ({
+          sticker: entry.querySelector('select[name="sticker"]').value,
+          quantity: entry.querySelector('select[name="quantity"]').value
+        }));
+        const state = {
+          actionIn: actionToggle.checked,
+          entries,
+          submitDisabled: submitBtn.disabled
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function addEntry(data = {}) {
+        const clone = document.importNode(tpl, true);
+        const select = clone.querySelector('select[name="sticker"]');
+        const qty = clone.querySelector('select[name="quantity"]');
+        const rm = clone.querySelector('.removeRow');
+
+        if (data.sticker) select.value = data.sticker;
+        if (data.quantity) qty.value = data.quantity;
+
+        select.addEventListener('change', saveState);
+        qty.addEventListener('change', saveState);
+        rm.addEventListener('click', () => {
+          clone.remove();
+          if (!container.querySelector('.stickerEntry')) addEntry();
+          saveState();
+        });
+
+        container.appendChild(clone);
+        saveState();
+      }
+
+      function loadState() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          try {
+            const { actionIn, entries, submitDisabled } = JSON.parse(raw);
+            actionToggle.checked = actionIn;
+            actionText.textContent = actionIn ? 'Stock In' : 'Stock Out';
+            container.innerHTML = '';
+            entries.length ? entries.forEach(addEntry) : addEntry();
+            submitBtn.disabled = submitDisabled;
+          } catch {
+            container.innerHTML = '';
+            addEntry();
+          }
+        } else addEntry();
+      }
+
+      actionToggle.addEventListener('change', () => {
+        actionText.textContent = actionToggle.checked ? 'Stock In' : 'Stock Out';
+        saveState();
+      });
+
+      addBtn.addEventListener('click', () => addEntry());
+      clearBtn.addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        actionToggle.checked = false;
+        actionText.textContent = 'Stock Out';
+        submitBtn.disabled = false;
+        container.innerHTML = '';
+        addEntry();
+      });
+
+      loadState();
+
+      document.getElementById('shipmentForm').addEventListener('submit', e => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        saveState();
+        const actionType = actionToggle.checked ? 'in' : 'out';
+        const entries = Array.from(container.querySelectorAll('.stickerEntry')).map(entry => ({
+          sticker: entry.querySelector('select[name="sticker"]').value,
+          quantity: parseInt(entry.querySelector('select[name="quantity"]').value, 10)
+        }));
+        google.script.run
+          .withSuccessHandler(() => {
+            alert('Inventory updated!');
+            submitBtn.disabled = false;
+          })
+          .withFailureHandler(err => {
+            alert('Error: ' + err.message);
+            submitBtn.disabled = false;
+          })
+          .processInventoryAction(actionType, entries);
+      });
+    });
+  </script>
+
+  <!-- Register service worker for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('sw.js', { scope: './' })
+        .then(() => console.log('Service Worker registered'))
+        .catch(e => console.error('SW registration failed', e));
+    }
+  </script>
 </body>
 </html>
