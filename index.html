@@ -2,164 +2,199 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
   <title>Dashboard</title>
 
-
-
-
-  <!-- PWA bits -->
+  <!-- PWA manifest & icons -->
   <link rel="manifest" href="manifest.json">
-
+  <meta name="theme-color" content="#0e6cfb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
+  <meta name="apple-mobile-web-app-title" content="Dashboard">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .catch(console.error);
-    }
-  </script>
 
   <style>
     :root {
       --bg: #f4f6f8;
-      --card-bg: #fff;
+      --card-bg: #ffffff;
       --primary: #0e6cfb;
-      --text: #333;
-      --shadow: rgba(0,0,0,0.1);
+      --text: #333333;
+      --shadow: rgba(0, 0, 0, 0.1);
     }
-    * { box-sizing: border-box; margin:0; padding:0; }
-    body {
+    html, body {
+      margin: 0;
+      padding: env(safe-area-inset-top)
+               env(safe-area-inset-right)
+               env(safe-area-inset-bottom)
+               env(safe-area-inset-left);
       background: var(--bg);
       color: var(--text);
-      font-family: sans-serif;
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 2rem;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .menu {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
-      gap: 1.5rem; width:100%; max-width:600px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 640px;
+      padding: 1rem;
     }
     .card {
       background: var(--card-bg);
-      border-radius: .75rem;
+      border-radius: 0.75rem;
       box-shadow: 0 4px 12px var(--shadow);
-      text-decoration: none; color: inherit;
-      padding:1.5rem; text-align:center;
-      transition: transform .2s, box-shadow .2s;
+      text-decoration: none;
+      color: inherit;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-5px);
       box-shadow: 0 8px 24px var(--shadow);
     }
-    .icon { font-size:2.5rem; margin-bottom:.5rem; color:var(--primary); }
-    .label { font-size:1.1rem; font-weight:600; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--primary);
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
   <div class="menu">
-    <a class="card" href="index.html?page=inventory">
-      <div class="icon">📦</div>
-      <div class="label">Inventory</div>
+    <a class="card" href="?page=inventory">
+      <div class="card-icon">📦</div>
+      <div class="card-title">Inventory</div>
     </a>
-    <a class="card" href="index.html?page=expenses">
-      <div class="icon">💸</div>
-      <div class="label">Expenses</div>
+    <a class="card" href="?page=expenses">
+      <div class="card-icon">💸</div>
+      <div class="card-title">Expenses</div>
     </a>
-    <a class="card" href="index.html?page=restock">
-      <div class="icon">🔄</div>
-      <div class="label">Restock</div>
+    <a class="card" href="?page=restock">
+      <div class="card-icon">🔄</div>
+      <div class="card-title">Restock</div>
     </a>
   </div>
+
+  <!-- Register service worker for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('sw.js', { scope: './' })
+        .then(() => console.log('Service Worker registered'))
+        .catch(e => console.error('SW registration failed', e));
+    }
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+  <title>Dashboard</title>
+
+  <!-- PWA manifest & icons -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0e6cfb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Dashboard">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card-bg: #ffffff;
+      --primary: #0e6cfb;
+      --text: #333333;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+    html, body {
+      margin: 0;
+      padding: env(safe-area-inset-top)
+               env(safe-area-inset-right)
+               env(safe-area-inset-bottom)
+               env(safe-area-inset-left);
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 640px;
+      padding: 1rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px var(--shadow);
+      text-decoration: none;
+      color: inherit;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--primary);
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu">
+    <a class="card" href="?page=inventory">
+      <div class="card-icon">📦</div>
+      <div class="card-title">Inventory</div>
+    </a>
+    <a class="card" href="?page=expenses">
+      <div class="card-icon">💸</div>
+      <div class="card-title">Expenses</div>
+    </a>
+    <a class="card" href="?page=restock">
+      <div class="card-icon">🔄</div>
+      <div class="card-title">Restock</div>
+    </a>
+  </div>
+
+  <!-- Register service worker for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('sw.js', { scope: './' })
+        .then(() => console.log('Service Worker registered'))
+        .catch(e => console.error('SW registration failed', e));
+    }
+  </script>
 </body>
 </html>
