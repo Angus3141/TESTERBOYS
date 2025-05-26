@@ -1,1 +1,74 @@
-<body> TESTER BOYS </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card-bg: #ffffff;
+      --primary: #0e6cfb;
+      --text: #333333;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 640px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px var(--shadow);
+      text-decoration: none;
+      color: inherit;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--primary);
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu">
+    <a class="card" href="?page=inventory">
+      <div class="card-icon">📦</div>
+      <div class="card-title">Inventory</div>
+    </a>
+    <a class="card" href="?page=expenses">
+      <div class="card-icon">💸</div>
+      <div class="card-title">Expenses</div>
+    </a>
+    <a class="card" href="?page=restock">
+      <div class="card-icon">🔄</div>
+      <div class="card-title">Restock</div>
+    </a>
+  </div>
+</body>
+</html>
