@@ -1,80 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- PWA stuff -->
-  <link rel="manifest" href="/manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Dashboard</title>
+
+  <!-- PWA bits -->
+  <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <!-- …your other head tags… -->
-  
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .catch(console.error);
+    }
+  </script>
+
   <style>
     :root {
       --bg: #f4f6f8;
-      --card-bg: #ffffff;
+      --card-bg: #fff;
       --primary: #0e6cfb;
-      --text: #333333;
-      --shadow: rgba(0, 0, 0, 0.1);
+      --text: #333;
+      --shadow: rgba(0,0,0,0.1);
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin:0; padding:0; }
     body {
-      background-color: var(--bg);
+      background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      font-family: sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 2rem;
     }
     .menu {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1.5rem;
-      width: 100%;
-      max-width: 640px;
+      grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+      gap: 1.5rem; width:100%; max-width:600px;
     }
     .card {
       background: var(--card-bg);
-      border-radius: 0.75rem;
+      border-radius: .75rem;
       box-shadow: 0 4px 12px var(--shadow);
-      text-decoration: none;
-      color: inherit;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none; color: inherit;
+      padding:1.5rem; text-align:center;
+      transition: transform .2s, box-shadow .2s;
     }
     .card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-4px);
       box-shadow: 0 8px 24px var(--shadow);
     }
-    .card-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.75rem;
-      color: var(--primary);
-    }
-    .card-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-    }
+    .icon { font-size:2.5rem; margin-bottom:.5rem; color:var(--primary); }
+    .label { font-size:1.1rem; font-weight:600; }
   </style>
 </head>
 <body>
   <div class="menu">
-    <a class="card" href="?page=inventory">
-      <div class="card-icon">📦</div>
-      <div class="card-title">Inventory</div>
+    <a class="card" href="index.html?page=inventory">
+      <div class="icon">📦</div>
+      <div class="label">Inventory</div>
     </a>
-    <a class="card" href="?page=expenses">
-      <div class="card-icon">💸</div>
-      <div class="card-title">Expenses</div>
+    <a class="card" href="index.html?page=expenses">
+      <div class="icon">💸</div>
+      <div class="label">Expenses</div>
     </a>
-    <a class="card" href="?page=restock">
-      <div class="card-icon">🔄</div>
-      <div class="card-title">Restock</div>
+    <a class="card" href="index.html?page=restock">
+      <div class="icon">🔄</div>
+      <div class="label">Restock</div>
     </a>
   </div>
 </body>
