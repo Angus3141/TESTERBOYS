@@ -143,8 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = false;
       })
       .processExpenses(user, entries);
-  });
-});
 </script>
+
+  <!-- Register service worker for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('sw.js', { scope: './' })
+        .then(() => console.log('Service Worker registered'))
+        .catch(e => console.error('SW registration failed', e));
+    }
+  </script>
 </body>
 </html>
