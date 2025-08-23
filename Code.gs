@@ -179,3 +179,45 @@ function addProducts(entries) {
     });
   });
 }
+
+/**
+ * Adds product listings to Firestore "products" collection.
+ * Each entry should contain: title, description, price, tags[], image1, variation{type,name,values[]}
+ */
+function addProductListings(entries) {
+  entries.forEach(entry => {
+    const payload = {
+      fields: {
+        title:       { stringValue: entry.title },
+        description: { stringValue: entry.description },
+        price:       { doubleValue: Number(entry.price) || 0 },
+        tags: {
+          arrayValue: {
+            values: (entry.tags || []).map(t => ({ stringValue: t }))
+          }
+        },
+        image1: { stringValue: entry.image1 || '' },
+        variation: {
+          mapValue: {
+            fields: {
+              type:  { stringValue: entry.variation?.type || '' },
+              name:  { stringValue: entry.variation?.name || '' },
+              values: {
+                arrayValue: {
+                  values: (entry.variation?.values || []).map(v => ({ stringValue: v }))
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    UrlFetchApp.fetch(`${BASE_URL}/products`, {
+      method: 'POST',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+  });
+}

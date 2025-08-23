@@ -73,14 +73,18 @@
     </label>
     <label>
       Or paste CSV data
-      <textarea id="csvText" rows="4" placeholder="name,threshold,stockLeft\nWidget,10,5"></textarea>
+      <textarea id="csvText" rows="4" placeholder="TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\nFishing Croc Charms,\"Sample description\",5.99,\"tag1,tag2\",https://example.com/image.jpg,Custom Property,Charm Type,\"value1,value2\""></textarea>
     </label>
     <button type="button" id="bulkUpload">Upload Products</button>
   </form>
 
   <script>
-    function sendEntries(entries, cb){
+    function sendInventoryEntries(entries, cb){
       google.script.run.withSuccessHandler(cb).withFailureHandler(err => alert('Error: ' + err.message)).addProducts(entries);
+    }
+
+    function sendProductEntries(entries, cb){
+      google.script.run.withSuccessHandler(cb).withFailureHandler(err => alert('Error: ' + err.message)).addProductListings(entries);
     }
 
     document.getElementById('singleForm').addEventListener('submit', e => {
@@ -91,7 +95,7 @@
         threshold: parseInt(form.threshold.value,10)||0,
         stockLeft: parseInt(form.stockLeft.value,10)||0
       };
-      sendEntries([entry], () => {
+      sendInventoryEntries([entry], () => {
         alert('Product added!');
         form.reset();
       });
@@ -101,15 +105,22 @@
       const lines = text.trim().split(/\r?\n/);
       const headers = lines.shift().split(',').map(h=>h.trim().toLowerCase());
       return lines.filter(Boolean).map(line => {
-        const cols = line.split(',');
+        const cols = line.match(/("([^"\\]|\\.)*"|[^,]*)(?=,|$)/g).map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
         const obj = {};
-        headers.forEach((h,i)=> obj[h]=cols[i]?cols[i].trim():'' );
+        headers.forEach((h,i)=> obj[h]=cols[i]?cols[i]:'' );
         return {
-          name: obj.name,
-          threshold: parseInt(obj.threshold,10)||0,
-          stockLeft: parseInt(obj.stockleft,10)||0
+          title: obj.title,
+          description: obj.description,
+          price: parseFloat(obj.price)||0,
+          tags: obj.tags ? obj.tags.split(',').map(t=>t.trim()).filter(Boolean) : [],
+          image1: obj.image1,
+          variation: {
+            type: obj['variation 1 type'] || '',
+            name: obj['variation 1 name'] || '',
+            values: obj['variation 1 values'] ? obj['variation 1 values'].split(',').map(v=>v.trim()).filter(Boolean) : []
+          }
         };
-      }).filter(e=>e.name);
+      }).filter(e=>e.title);
     }
 
     document.getElementById('bulkUpload').addEventListener('click', () => {
@@ -118,14 +129,14 @@
         const reader = new FileReader();
         reader.onload = e => {
           const entries = parseCSV(e.target.result);
-          if (entries.length) sendEntries(entries, () => alert('Products uploaded!'));
+          if (entries.length) sendProductEntries(entries, () => alert('Products uploaded!'));
           else alert('No valid rows found.');
         };
         reader.readAsText(file);
       } else {
         const text = document.getElementById('csvText').value;
         const entries = parseCSV(text);
-        if (entries.length) sendEntries(entries, () => alert('Products uploaded!'));
+        if (entries.length) sendProductEntries(entries, () => alert('Products uploaded!'));
         else alert('No valid rows found.');
       }
     });
