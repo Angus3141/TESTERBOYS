@@ -1,7 +1,7 @@
 /**
  * Firestore configuration
  */
-const PROJECT_ID = 'YOUR_FIRESTORE_PROJECT_ID';
+const PROJECT_ID = 'testerboys-31725';
 const BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
 /**
