@@ -1,0 +1,103 @@
+html, body { margin:0; padding:0; }
+body {
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.back-button {
+  text-decoration: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #0e6cfb;
+}
+.app-header h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.app-container {
+  padding: .75rem;
+}
+
+.product-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: .75rem;
+}
+
+.product-card {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+}
+
+.product-card h2 {
+  margin: 0;
+  padding: .5rem;
+  font-size: 1rem;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.open {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.modal-content button {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-content img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
