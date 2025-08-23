@@ -1,4 +1,4 @@
-// app.js — Add New Product page logic (robust CSV handling; preserves commas inside cells)
+// app.js — Add New Product page logic (robust RFC-4180 CSV + working mode buttons)
 
 (async function () {
   const VERSION = '10.12.5';
@@ -26,102 +26,118 @@
       f.addEventListener('submit', e => e.preventDefault());
       f.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
     });
+    // make every <button> inside a form type="button" to avoid accidental submits
     document.querySelectorAll('form button').forEach(btn => {
+      if (!btn.getAttribute('type')) btn.setAttribute('type', 'button');
+    });
+    // also make the mode buttons safe
+    document.querySelectorAll('.mode-buttons button').forEach(btn => {
       if (!btn.getAttribute('type')) btn.setAttribute('type', 'button');
     });
   }
 
-  // Title-case normaliser used for human-facing text; does NOT split fields anymore.
-  function normalizeParts(text) {
-    return (text || '')
-      .split(',') // keep existing behaviour for titles/descriptions that came comma-separated
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(s => s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+  // Split helper for list fields: DO NOT split on commas.
+  // If multiple entries are desired, separate with ';' or '|'.
+  function splitList(s = '') {
+    const t = String(s).trim();
+    if (!t) return [];
+    const parts = /[;|]/.test(t) ? t.split(/[;|]/) : [t];
+    return parts.map(p => p.trim()).filter(Boolean);
   }
 
-  // RFC 4180-compliant CSV line parser: preserves commas inside quoted cells; supports "" escapes.
-  function parseCSVLine(s) {
-    const out = [];
-    let cur = '';
+  // ===== Robust CSV Parser (RFC-4180) =====
+  // Handles:
+  //  - commas inside quoted cells
+  //  - "" escaped quotes inside quoted cells
+  //  - newlines inside quoted cells
+  //  - empty trailing cells
+  function parseCSVToMatrix(text) {
+    const s = (text || '').replace(/^\uFEFF/, '');
+    const rows = [];
+    let row = [];
+    let cell = '';
     let inQuotes = false;
+
     for (let i = 0; i < s.length; i++) {
       const ch = s[i];
+
       if (inQuotes) {
         if (ch === '"') {
-          if (i + 1 < s.length && s[i + 1] === '"') { // double quote -> literal quote
-            cur += '"';
+          // escaped quote?
+          if (i + 1 < s.length && s[i + 1] === '"') {
+            cell += '"';
             i++;
           } else {
             inQuotes = false;
           }
         } else {
-          cur += ch;
+          cell += ch;
         }
       } else {
-        if (ch === ',') {
-          out.push(cur);
-          cur = '';
-        } else if (ch === '"') {
+        if (ch === '"') {
           inQuotes = true;
+        } else if (ch === ',') {
+          row.push(cell);
+          cell = '';
+        } else if (ch === '\r') {
+          // ignore; \r\n handled by \n branch
+        } else if (ch === '\n') {
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = '';
         } else {
-          cur += ch;
+          cell += ch;
         }
       }
     }
-    out.push(cur);
-    return out.map(c => c.trim());
+    // push last cell/row
+    row.push(cell);
+    // if there's at least one non-empty value or there were separators, keep the row
+    if (row.length > 1 || (row.length === 1 && row[0].trim() !== '')) {
+      rows.push(row);
+    }
+
+    // Trim cells at the end
+    return rows.map(r => r.map(c => c.trim()));
   }
 
-  // Quote a single field for CSV output (used by Row/TSV mode)
+  function parseCSV(text) {
+    const matrix = parseCSVToMatrix(text);
+    if (!matrix.length) return [];
+
+    const header = matrix[0].map(h => h.toLowerCase());
+    const body = matrix.slice(1).filter(r => r.some(c => c && c.trim().length));
+
+    return body.map(cols => {
+      const obj = {};
+      header.forEach((h, i) => { obj[h] = (cols[i] ?? '').trim(); });
+
+      return {
+        // Preserve commas exactly as provided
+        title: obj.title || '',
+        description: obj.description || '',
+        price: parseFloat(obj.price) || 0,
+        tags: splitList(obj.tags),
+        image1: obj.image1 || '',
+        variation: {
+          type: obj['variation 1 type'] || '',
+          name: obj['variation 1 name'] || '',
+          values: splitList(obj['variation 1 values']),
+        },
+      };
+    }).filter(e => e.title);
+  }
+
+  // For Row (paste) mode: quote a field for CSV if needed
   function csvQuote(field = '') {
     const s = String(field ?? '');
-    const needsQuotes = /[",\r\n]/.test(s);
+    const needs = /[",\r\n]/.test(s);
     const esc = s.replace(/"/g, '""');
-    return needsQuotes ? `"${esc}"` : esc;
+    return needs ? `"${esc}"` : esc;
   }
 
-  // Split helper for list fields: DO NOT split on commas (since many cells contain commas).
-  // If multiple entries are desired, separate them with ';' or '|' in the CSV cell.
-  function splitListPreservingCommas(s = '') {
-    const trimmed = s.trim();
-    if (!trimmed) return [];
-    const parts = /[;|]/.test(trimmed) ? trimmed.split(/[;|]/) : [trimmed];
-    return parts.map(p => p.trim()).filter(Boolean);
-  }
-
-  // Robust CSV parser using parseCSVLine for every row.
-  function parseCSV(text) {
-    const clean = (text || '').replace(/^\uFEFF/, '').trim();
-    if (!clean) return [];
-    const lines = clean.split(/\r?\n/);
-
-    const headers = parseCSVLine(lines.shift()).map(h => h.toLowerCase());
-    if (!headers.length) return [];
-
-    return lines
-      .filter(line => line.length > 0)
-      .map(line => {
-        const cols = parseCSVLine(line);
-        const obj = {};
-        headers.forEach((h, i) => (obj[h] = (cols[i] ?? '').trim()));
-
-        return {
-          title: normalizeParts(obj.title).join(', '),           // keep visual normalisation
-          description: normalizeParts(obj.description).join(', '),
-          price: parseFloat(obj.price) || 0,
-          tags: splitListPreservingCommas(obj.tags),             // use ; or | for multiple
-          image1: (obj.image1 || '').trim(),
-          variation: {
-            type: (obj['variation 1 type'] || '').trim(),
-            name: (obj['variation 1 name'] || '').trim(),
-            values: splitListPreservingCommas(obj['variation 1 values']), // use ; or |
-          },
-        };
-      })
-      .filter(e => e.title);
-  }
-
+  // ===== Load Firebase SDKs =====
   try {
     for (const url of SDKS) await loadScript(url);
   } catch (e) {
@@ -150,17 +166,25 @@
     console.error('Anon sign-in failed:', err);
   }
 
+  // Safe batching (Firestore limit 500 ops per batch). We'll use 400 to be comfy.
   async function writeProducts(entries) {
-    const batch = db.batch();
+    const chunkSize = 400;
     const now = firebase.firestore.FieldValue.serverTimestamp();
-    entries.forEach(e => {
-      const ref = db.collection('products').doc();
-      batch.set(ref, { ...e, createdAt: now, updatedAt: now });
-    });
-    await batch.commit();
+
+    for (let i = 0; i < entries.length; i += chunkSize) {
+      const batch = db.batch();
+      const slice = entries.slice(i, i + chunkSize);
+      slice.forEach(e => {
+        const ref = db.collection('products').doc();
+        batch.set(ref, { ...e, createdAt: now, updatedAt: now });
+      });
+      await batch.commit();
+    }
   }
 
   blockFormSubmissions();
+
+  // ===== UI wiring =====
   const singleStatus = document.getElementById('singleStatus');
   const rowStatus    = document.getElementById('rowStatus');
   const csvStatus    = document.getElementById('csvStatus');
@@ -171,19 +195,37 @@
   // Toggle forms based on buttons
   const forms = ['singleForm','rowForm','csvForm'];
   const modeBtns = Array.from(document.querySelectorAll('.mode-buttons button'));
+
+  function showForm(targetId) {
+    forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    document.getElementById(targetId)?.classList.remove('hidden');
+    modeBtns.forEach(b => b.classList.remove('active'));
+    const match = modeBtns.find(b => b.dataset.target === targetId);
+    match?.classList.add('active');
+  }
+
   modeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-      document.getElementById(btn.dataset.target)?.classList.remove('hidden');
-      modeBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      const target = btn.dataset.target;
+      if (!target) return;
+      showForm(target);
+      // optional: update hash to allow deep-linking/back/forward
+      try { history.replaceState(null, '', `#${target}`); } catch (_) {}
     });
   });
+
+  // Start hidden, then reveal the requested or default form
   forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-  // forms start hidden; show relevant form when a button is pressed
+  const hashTarget = location.hash?.slice(1);
+  if (hashTarget && forms.includes(hashTarget)) {
+    showForm(hashTarget);
+  } else {
+    showForm('singleForm'); // sensible default
+  }
 
-  const field = id => document.getElementById(id)?.value.trim() || '';
+  const field = id => (document.getElementById(id)?.value ?? '').trim();
 
+  // ===== Handlers =====
   singleBtn?.addEventListener('click', async () => {
     try {
       setStatus(singleStatus, '');
@@ -191,13 +233,12 @@
         title: field('title'),
         description: field('description'),
         price: parseFloat(field('price')) || 0,
-        // IMPORTANT: do not split on commas; allow ; or | for multiple
-        tags: splitListPreservingCommas(field('tags')),
+        tags: splitList(field('tags')), // use ; or | for multiple
         image1: field('image1'),
         variation: {
           type: field('varType'),
           name: field('varName'),
-          values: splitListPreservingCommas(field('varValues')),
+          values: splitList(field('varValues')),
         },
       };
 
@@ -213,32 +254,31 @@
     }
   });
 
-  // Row mode: treat pasted text as TSV by default, with robust quoting to CSV.
-  // If no tabs are present, fall back to treating each non-empty line as a CSV row.
+  // Row mode: support TSV (tabs) or CSV (commas); we quote TSV so embedded commas survive.
   rowBtn?.addEventListener('click', async () => {
     try {
       setStatus(rowStatus, '');
       const raw = document.getElementById('rowText')?.value || '';
-      const nonEmptyLines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
-      if (!nonEmptyLines.length) { alert('No valid rows found.'); return; }
+      const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (!lines.length) { alert('No valid rows found.'); return; }
 
-      const headerCols = [
+      const header = [
         'TITLE','DESCRIPTION','PRICE','TAGS','IMAGE1',
         'VARIATION 1 TYPE','VARIATION 1 NAME','VARIATION 1 VALUES'
       ];
 
       let csvBody = '';
       if (raw.includes('\t')) {
-        // TSV path: split by tabs and quote each cell for CSV
-        csvBody = nonEmptyLines
+        // Treat as TSV: split by tabs, then safely quote to CSV
+        csvBody = lines
           .map(line => line.split('\t').map(csvQuote).join(','))
           .join('\n');
       } else {
-        // CSV path: assume user already pasted CSV rows; keep as-is
-        csvBody = nonEmptyLines.join('\n');
+        // Treat as CSV already; leave as-is to preserve quoting the user pasted
+        csvBody = lines.join('\n');
       }
 
-      const csv = `${headerCols.join(',')}\n${csvBody}`;
+      const csv = `${header.join(',')}\n${csvBody}`;
       const entries = parseCSV(csv);
       if (!entries.length) { alert('No valid rows found.'); return; }
 
@@ -271,6 +311,7 @@
     }
   });
 
+  // swipe back
   let startX = 0;
   document.addEventListener('touchstart', e => (startX = e.changedTouches[0].screenX));
   document.addEventListener('touchend', e => {
@@ -279,8 +320,4 @@
       else location.href = '../index.html';
     }
   });
-
-  // Developer note:
-  // - To allow multiple tags/values within a single cell without breaking on commas,
-  //   separate them with ';' or '|' (e.g., "red; blue | green").
 })();
