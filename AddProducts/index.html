@@ -2,68 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Add Products</title>
-  <link rel="manifest" href="/root/manifest.json" />
-  <link rel="stylesheet" href="/root/ios.css" />
-  <meta name="theme-color" content="#0e6cfb" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Add Products" />
-  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMBA3+AcqQAAAAASUVORK5CYII=" />
-  <style>
-    html, body { margin:0; padding:0; overflow:hidden; }
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      box-sizing: border-box;
-    }
-    .app-header {
-      display:flex; align-items:center; gap:.5rem; padding:.5rem;
-      background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.06); position:sticky; top:0; z-index:10;
-    }
-    .back-button { text-decoration:none; font-size:1.5rem; line-height:1; color:#0e6cfb; }
-    .app-container { padding:.5rem; display:grid; gap:.75rem; }
-    form {
-      margin: 0 5px;
-      padding: 0.5rem;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    h1 { font-size: 1.25rem; margin: 0; }
-    label { font-size: 0.9rem; }
-    input, textarea {
-      font-size: 1rem;
-      padding: 0.4rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-      width:100%;
-    }
-    button {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #singleUpload { background: #007bff; color: #fff; }
-    #bulkUpload { background: #28a745; color: #fff; }
-    .status { font-size:.9rem; color:#333; }
-  </style>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <header class="app-header">
-    <a href="/index.html" class="back-button" aria-label="Back">‹</a>
+    <a href="./index.html" class="back-button" aria-label="Back">‹</a>
     <h1>Add Products</h1>
   </header>
 
   <main class="app-container">
+    <!-- Single product -->
     <form id="singleForm" class="panel" aria-label="Single Product CSV Form">
       <label>
         CSV File
@@ -78,6 +31,7 @@ Fishing Croc Charms,&quot;Sample description&quot;,5.99,&quot;tag1,tag2&quot;,ht
       <div class="status" id="singleStatus" aria-live="polite"></div>
     </form>
 
+    <!-- Bulk products -->
     <form id="bulkForm" class="panel" aria-label="Bulk Product Form">
       <label>
         CSV File
@@ -93,143 +47,12 @@ Fishing Croc Charms,&quot;Sample description&quot;,5.99,&quot;tag1,tag2&quot;,ht
     </form>
   </main>
 
-  <!-- Firestore implementation -->
-  <script type="module">
-    // Try to import firebase config (preferred: export default)
-    let firebaseConfig;
-    try {
-      const mod = await import('/root/firebase-config.js');
-      firebaseConfig = mod.default ?? mod.firebaseConfig ?? window.firebaseConfig;
-    } catch (e) {
-      firebaseConfig = window.firebaseConfig; // fallback if script is included old-style
-    }
-    if (!firebaseConfig) {
-      console.error('Missing firebaseConfig. Ensure /root/firebase-config.js exports default config or sets window.firebaseConfig.');
-      alert('Firebase config missing. Check /root/firebase-config.js.');
-    }
+  <!-- Firebase SDKs (ESM from CDN) -->
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"></script>
 
-    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getFirestore, writeBatch, doc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-    if (!getApps().length) initializeApp(firebaseConfig);
-
-    const auth = getAuth();
-    // Sign in anonymously so rules can require auth without user UI
-    try { await signInAnonymously(auth); } catch (_) { /* ignore; may already be signed in */ }
-
-    const db = getFirestore();
-
-    // CSV parsing with quoted fields support (including commas and escaped quotes)
-    function parseCSV(text) {
-      const clean = text.replace(/^\uFEFF/, '').trim();
-      if (!clean) return [];
-      const lines = clean.split(/\r?\n/);
-
-      const parseLine = (s) =>
-        s.match(/("([^"\\]|\\.|"")*"|[^,]*)(?=,|$)/g)
-         .map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
-
-      const headers = parseLine(lines.shift()).map(h => h.toLowerCase());
-      return lines
-        .filter(Boolean)
-        .map(line => {
-          const cols = parseLine(line);
-          const obj = {};
-          headers.forEach((h, i) => obj[h] = (cols[i] ?? ''));
-          return {
-            title: obj.title,
-            description: obj.description,
-            price: parseFloat(obj.price) || 0,
-            tags: obj.tags ? obj.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-            image1: obj.image1,
-            variation: {
-              type: obj['variation 1 type'] || '',
-              name: obj['variation 1 name'] || '',
-              values: obj['variation 1 values'] ? obj['variation 1 values'].split(',').map(v => v.trim()).filter(Boolean) : []
-            }
-          };
-        })
-        .filter(e => e.title);
-    }
-
-    async function writeProductsToFirestore(entries) {
-      const batch = writeBatch(db);
-      for (const e of entries) {
-        const ref = doc(collection(db, 'products'));
-        batch.set(ref, {
-          ...e,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-      }
-      await batch.commit();
-    }
-
-    function setStatus(el, msg) {
-      if (!el) return;
-      el.textContent = msg;
-    }
-
-    async function handleUpload({ single = false }) {
-      const fileInput = document.getElementById(single ? 'singleFile' : 'bulkFile');
-      const textArea = document.getElementById(single ? 'singleText' : 'bulkText');
-      const statusEl = document.getElementById(single ? 'singleStatus' : 'bulkStatus');
-
-      setStatus(statusEl, '');
-
-      let csv = '';
-      const file = fileInput.files[0];
-      if (file) {
-        csv = await file.text();
-      } else {
-        csv = textArea.value;
-      }
-
-      const entries = parseCSV(csv);
-      if (!entries.length) {
-        alert('No valid rows found.');
-        return;
-      }
-
-      try {
-        setStatus(statusEl, 'Uploading to Firestore…');
-        // If single, only send first entry
-        await writeProductsToFirestore(single ? [entries[0]] : entries);
-        setStatus(statusEl, single ? 'Product uploaded!' : 'Products uploaded!');
-        if (single) document.getElementById('singleForm').reset();
-        if (!single) document.getElementById('bulkForm').reset();
-      } catch (e) {
-        console.error(e);
-        alert('Firestore write failed: ' + (e.message || e));
-        setStatus(statusEl, 'Upload failed.');
-      }
-    }
-
-    document.getElementById('singleUpload').addEventListener('click', () => handleUpload({ single: true }));
-    document.getElementById('bulkUpload').addEventListener('click', () => handleUpload({ single: false }));
-
-    // iOS-style back swipe
-    document.addEventListener('DOMContentLoaded', () => {
-      let startX = 0;
-      document.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX);
-      document.addEventListener('touchend', e => {
-        if (e.changedTouches[0].screenX - startX > 80) {
-          if (history.length > 1) history.back();
-          else location.href = '/index.html';
-        }
-      });
-    });
-  </script>
-
-  <!-- Service worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/root/sw.js', { scope: '/root/' })
-        .then(() => console.log('Service Worker registered'))
-        .catch(e => console.error('SW registration failed', e));
-    }
-  </script>
+  <!-- App logic -->
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
