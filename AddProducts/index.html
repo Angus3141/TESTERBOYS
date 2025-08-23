@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Add Products</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
@@ -47,12 +44,12 @@ Fishing Croc Charms,&quot;Sample description&quot;,5.99,&quot;tag1,tag2&quot;,ht
     </form>
   </main>
 
-  <!-- Firebase SDKs (ESM from CDN) -->
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"></script>
+  <!-- Firebase compat SDKs (avoid module import issues) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
-  <!-- App logic -->
-  <script type="module" src="./app.js"></script>
+  <!-- Your app logic -->
+  <script src="./app.js"></script>
 </body>
 </html>
