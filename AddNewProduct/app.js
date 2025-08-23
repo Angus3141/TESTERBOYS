@@ -150,8 +150,17 @@
   const modeBtns = Array.from(document.querySelectorAll('.mode-buttons button'));
 
   function showForm(targetId) {
-    forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-    document.getElementById(targetId)?.classList.remove('hidden');
+    forms.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('hidden');
+      el.setAttribute('hidden', '');
+    });
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.classList.remove('hidden');
+      target.removeAttribute('hidden');
+    }
     modeBtns.forEach(b => b.classList.remove('active'));
     modeBtns.find(b => b.dataset.target === targetId)?.classList.add('active');
   }
@@ -165,7 +174,11 @@
     });
   });
 
-  forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  forms.forEach(id => {
+    const el = document.getElementById(id);
+    el?.classList.add('hidden');
+    el?.setAttribute('hidden', '');
+  });
   const hashTarget = location.hash?.slice(1);
   showForm(forms.includes(hashTarget) ? hashTarget : 'singleForm');
 
