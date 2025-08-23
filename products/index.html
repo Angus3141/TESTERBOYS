@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Products</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <a href="../index.html" class="back-button" aria-label="Back">‹</a>
+    <h1>Products</h1>
+  </header>
+
+  <main class="app-container">
+    <div id="productList" class="product-list" aria-live="polite"></div>
+  </main>
+
+  <div id="productModal" class="modal" role="dialog" aria-modal="true" hidden>
+    <div class="modal-content">
+      <button id="modalClose" aria-label="Close">✖</button>
+      <img id="modalImage" alt="" />
+      <h2 id="modalTitle"></h2>
+      <p id="modalDescription"></p>
+      <p id="modalPrice"></p>
+      <p id="modalTags"></p>
+      <p id="modalVariation"></p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
