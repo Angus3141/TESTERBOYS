@@ -6,14 +6,14 @@
   <title>Dashboard</title>
 
   <!-- PWA manifest & icons -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#007aff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Dashboard">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="ios.css">
-  <script type="module" src="firebase-config.js"></script>
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/ios.css">
+
 
   <style>
     .menu {
@@ -48,19 +48,19 @@
 </head>
 <body>
   <div class="menu">
-    <a class="card" href="?page=inventory">
+    <a class="card" href="/inventory.html">
       <div class="card-icon">📦</div>
       <div class="card-title">Inventory</div>
     </a>
-    <a class="card" href="?page=expenses">
+    <a class="card" href="/Expenses.html">
       <div class="card-icon">💸</div>
       <div class="card-title">Expenses</div>
     </a>
-    <a class="card" href="?page=restock">
+    <a class="card" href="/restock.html">
       <div class="card-icon">🔄</div>
       <div class="card-title">Restock</div>
     </a>
-    <a class="card" href="?page=addproducts">
+    <a class="card" href="/AddProducts.html">
       <div class="card-icon">➕</div>
       <div class="card-title">Add Products</div>
     </a>
@@ -70,7 +70,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('sw.js', { scope: './' })
+        .register('/sw.js', { scope: '/' })
         .then(() => console.log('Service Worker registered'))
         .catch(e => console.error('SW registration failed', e));
     }
