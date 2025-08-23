@@ -41,6 +41,10 @@ body {
 }
 
 .mode-buttons button { flex: 1; }
+.mode-buttons button.active {
+  background: #007bff;
+  color: #fff;
+}
 
 .hidden { display: none; }
 

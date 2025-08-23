@@ -117,12 +117,16 @@
 
   // Toggle forms based on buttons
   const forms = ['singleForm','rowForm','csvForm'];
-  document.querySelectorAll('.mode-buttons button').forEach(btn => {
+  const modeBtns = Array.from(document.querySelectorAll('.mode-buttons button'));
+  modeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
       document.getElementById(btn.dataset.target)?.classList.remove('hidden');
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
     });
   });
+  modeBtns[0]?.classList.add('active');
 
   const field = id => document.getElementById(id)?.value.trim();
 
