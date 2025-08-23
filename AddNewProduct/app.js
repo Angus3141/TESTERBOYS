@@ -136,6 +136,38 @@
     const esc = s.replace(/"/g, '""');
     return needs ? `"${esc}"` : esc;
   }
+  blockFormSubmissions();
+
+  // ===== Mode button UI =====
+  const singleStatus = document.getElementById('singleStatus');
+  const rowStatus    = document.getElementById('rowStatus');
+  const csvStatus    = document.getElementById('csvStatus');
+  const singleBtn    = document.getElementById('singleUpload');
+  const rowBtn       = document.getElementById('rowUpload');
+  const csvBtn       = document.getElementById('csvUpload');
+
+  const forms = ['singleForm','rowForm','csvForm'];
+  const modeBtns = Array.from(document.querySelectorAll('.mode-buttons button'));
+
+  function showForm(targetId) {
+    forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+    document.getElementById(targetId)?.classList.remove('hidden');
+    modeBtns.forEach(b => b.classList.remove('active'));
+    modeBtns.find(b => b.dataset.target === targetId)?.classList.add('active');
+  }
+
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.target;
+      if (!target) return;
+      showForm(target);
+      try { history.replaceState(null, '', `#${target}`); } catch (_) {}
+    });
+  });
+
+  forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  const hashTarget = location.hash?.slice(1);
+  showForm(forms.includes(hashTarget) ? hashTarget : 'singleForm');
 
   // ===== Load Firebase SDKs =====
   try {
@@ -180,47 +212,6 @@
       });
       await batch.commit();
     }
-  }
-
-  blockFormSubmissions();
-
-  // ===== UI wiring =====
-  const singleStatus = document.getElementById('singleStatus');
-  const rowStatus    = document.getElementById('rowStatus');
-  const csvStatus    = document.getElementById('csvStatus');
-  const singleBtn    = document.getElementById('singleUpload');
-  const rowBtn       = document.getElementById('rowUpload');
-  const csvBtn       = document.getElementById('csvUpload');
-
-  // Toggle forms based on buttons
-  const forms = ['singleForm','rowForm','csvForm'];
-  const modeBtns = Array.from(document.querySelectorAll('.mode-buttons button'));
-
-  function showForm(targetId) {
-    forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-    document.getElementById(targetId)?.classList.remove('hidden');
-    modeBtns.forEach(b => b.classList.remove('active'));
-    const match = modeBtns.find(b => b.dataset.target === targetId);
-    match?.classList.add('active');
-  }
-
-  modeBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.target;
-      if (!target) return;
-      showForm(target);
-      // optional: update hash to allow deep-linking/back/forward
-      try { history.replaceState(null, '', `#${target}`); } catch (_) {}
-    });
-  });
-
-  // Start hidden, then reveal the requested or default form
-  forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-  const hashTarget = location.hash?.slice(1);
-  if (hashTarget && forms.includes(hashTarget)) {
-    showForm(hashTarget);
-  } else {
-    showForm('singleForm'); // sensible default
   }
 
   const field = id => (document.getElementById(id)?.value ?? '').trim();
