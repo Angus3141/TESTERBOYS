@@ -1,4 +1,4 @@
-// app.js — Add New Product page logic
+// app.js — Add New Product page logic (robust CSV handling; preserves commas inside cells)
 
 (async function () {
   const VERSION = '10.12.5';
@@ -31,44 +31,91 @@
     });
   }
 
-  // CSV parser reused from AddProducts page
+  // Title-case normaliser used for human-facing text; does NOT split fields anymore.
   function normalizeParts(text) {
     return (text || '')
-      .split(',')
+      .split(',') // keep existing behaviour for titles/descriptions that came comma-separated
       .map(s => s.trim())
       .filter(Boolean)
       .map(s => s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
   }
 
+  // RFC 4180-compliant CSV line parser: preserves commas inside quoted cells; supports "" escapes.
+  function parseCSVLine(s) {
+    const out = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (i + 1 < s.length && s[i + 1] === '"') { // double quote -> literal quote
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          cur += ch;
+        }
+      } else {
+        if (ch === ',') {
+          out.push(cur);
+          cur = '';
+        } else if (ch === '"') {
+          inQuotes = true;
+        } else {
+          cur += ch;
+        }
+      }
+    }
+    out.push(cur);
+    return out.map(c => c.trim());
+  }
+
+  // Quote a single field for CSV output (used by Row/TSV mode)
+  function csvQuote(field = '') {
+    const s = String(field ?? '');
+    const needsQuotes = /[",\r\n]/.test(s);
+    const esc = s.replace(/"/g, '""');
+    return needsQuotes ? `"${esc}"` : esc;
+  }
+
+  // Split helper for list fields: DO NOT split on commas (since many cells contain commas).
+  // If multiple entries are desired, separate them with ';' or '|' in the CSV cell.
+  function splitListPreservingCommas(s = '') {
+    const trimmed = s.trim();
+    if (!trimmed) return [];
+    const parts = /[;|]/.test(trimmed) ? trimmed.split(/[;|]/) : [trimmed];
+    return parts.map(p => p.trim()).filter(Boolean);
+  }
+
+  // Robust CSV parser using parseCSVLine for every row.
   function parseCSV(text) {
     const clean = (text || '').replace(/^\uFEFF/, '').trim();
     if (!clean) return [];
     const lines = clean.split(/\r?\n/);
 
-    const parseLine = (s) =>
-      (s.match(/("([^"\\]|\\.|"")*"|[^,]*)(?=,|$)/g) || [])
-        .map((c) => c.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
-
-    const headers = parseLine(lines.shift()).map(h => h.toLowerCase());
+    const headers = parseCSVLine(lines.shift()).map(h => h.toLowerCase());
     if (!headers.length) return [];
 
     return lines
-      .filter(Boolean)
+      .filter(line => line.length > 0)
       .map(line => {
-        const cols = parseLine(line);
+        const cols = parseCSVLine(line);
         const obj = {};
-        headers.forEach((h, i) => (obj[h] = cols[i] ?? ''));
+        headers.forEach((h, i) => (obj[h] = (cols[i] ?? '').trim()));
 
         return {
-          title: normalizeParts(obj.title).join(', '),
+          title: normalizeParts(obj.title).join(', '),           // keep visual normalisation
           description: normalizeParts(obj.description).join(', '),
           price: parseFloat(obj.price) || 0,
-          tags: normalizeParts(obj.tags),
-          image1: normalizeParts(obj.image1).join(', '),
+          tags: splitListPreservingCommas(obj.tags),             // use ; or | for multiple
+          image1: (obj.image1 || '').trim(),
           variation: {
-            type: normalizeParts(obj['variation 1 type']).join(', '),
-            name: normalizeParts(obj['variation 1 name']).join(', '),
-            values: normalizeParts(obj['variation 1 values']),
+            type: (obj['variation 1 type'] || '').trim(),
+            name: (obj['variation 1 name'] || '').trim(),
+            values: splitListPreservingCommas(obj['variation 1 values']), // use ; or |
           },
         };
       })
@@ -135,7 +182,7 @@
   forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
   // forms start hidden; show relevant form when a button is pressed
 
-  const field = id => document.getElementById(id)?.value.trim();
+  const field = id => document.getElementById(id)?.value.trim() || '';
 
   singleBtn?.addEventListener('click', async () => {
     try {
@@ -144,12 +191,13 @@
         title: field('title'),
         description: field('description'),
         price: parseFloat(field('price')) || 0,
-        tags: field('tags') ? field('tags').split(',').map(t => t.trim()).filter(Boolean) : [],
+        // IMPORTANT: do not split on commas; allow ; or | for multiple
+        tags: splitListPreservingCommas(field('tags')),
         image1: field('image1'),
         variation: {
           type: field('varType'),
           name: field('varName'),
-          values: field('varValues') ? field('varValues').split(',').map(v => v.trim()).filter(Boolean) : [],
+          values: splitListPreservingCommas(field('varValues')),
         },
       };
 
@@ -165,14 +213,35 @@
     }
   });
 
+  // Row mode: treat pasted text as TSV by default, with robust quoting to CSV.
+  // If no tabs are present, fall back to treating each non-empty line as a CSV row.
   rowBtn?.addEventListener('click', async () => {
     try {
       setStatus(rowStatus, '');
-      const text = document.getElementById('rowText')?.value || '';
-      const normalized = text.replace(/\t/g, ',');
-      const csv = `TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\n${normalized}`;
+      const raw = document.getElementById('rowText')?.value || '';
+      const nonEmptyLines = raw.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (!nonEmptyLines.length) { alert('No valid rows found.'); return; }
+
+      const headerCols = [
+        'TITLE','DESCRIPTION','PRICE','TAGS','IMAGE1',
+        'VARIATION 1 TYPE','VARIATION 1 NAME','VARIATION 1 VALUES'
+      ];
+
+      let csvBody = '';
+      if (raw.includes('\t')) {
+        // TSV path: split by tabs and quote each cell for CSV
+        csvBody = nonEmptyLines
+          .map(line => line.split('\t').map(csvQuote).join(','))
+          .join('\n');
+      } else {
+        // CSV path: assume user already pasted CSV rows; keep as-is
+        csvBody = nonEmptyLines.join('\n');
+      }
+
+      const csv = `${headerCols.join(',')}\n${csvBody}`;
       const entries = parseCSV(csv);
       if (!entries.length) { alert('No valid rows found.'); return; }
+
       setStatus(rowStatus, 'Uploading to Firestore…');
       await writeProducts(entries);
       setStatus(rowStatus, 'Products uploaded!');
@@ -210,4 +279,8 @@
       else location.href = '../index.html';
     }
   });
+
+  // Developer note:
+  // - To allow multiple tags/values within a single cell without breaking on commas,
+  //   separate them with ';' or '|' (e.g., "red; blue | green").
 })();
