@@ -6,7 +6,7 @@
   <title>Restock Alerts</title>
 
   <!-- PWA manifest & icons -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#007aff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,31 +15,12 @@
   <link rel="stylesheet" href="ios.css">
   <script type="module" src="firebase-config.js"></script>
 
+
   <style>
-    html, body {
-      margin: 0;
-      overflow-x: hidden;
-      position: relative;
-    }
-    a.menu-link {
-      position: absolute;
-      top: env(safe-area-inset-top, 10px);
-      left: env(safe-area-inset-left, 10px);
-      font-size: 1.5rem;
-      text-decoration: none;
-      color: var(--text);
-    }
-    h1 {
-      text-align: center;
-      margin: 1rem 0;
-      font-size: 1.8rem;
-      color: #2c3e50;
-    }
     .grid {
       display: grid;
       gap: 1rem;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      margin: 0 1rem 2rem;
     }
     .card {
       padding: 1rem;
@@ -80,11 +61,11 @@
   </style>
 </head>
 <body>
-  <!-- Back to dashboard/menu -->
-  <a class="menu-link" href="?page=index" aria-label="Back to Menu">☰</a>
-
-  <h1>Restock Alerts</h1>
-
+  <header class="app-header">
+    <a href="/index.html" class="back-button">‹</a>
+    <h1>Restock Alerts</h1>
+  </header>
+  <main class="app-container">
   <? if (alertItems && alertItems.length) { ?>
     <div class="grid">
       <? alertItems.forEach(item => { ?>
@@ -110,6 +91,7 @@
       All stocked items are above threshold. No restock needed!
     </p>
   <? } ?>
+  </main>
 
   <!-- Register service worker for PWA -->
   <script>
@@ -121,14 +103,14 @@
       document.addEventListener('touchend', e => {
         if (e.changedTouches[0].screenX - startX > 80) {
           if (history.length > 1) history.back();
-          else location.href = '?page=index';
+          else location.href = '/index.html';
         }
       });
     });
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('sw.js', { scope: './' })
+        .register('/sw.js', { scope: '/' })
         .then(() => console.log('Service Worker registered'))
         .catch(e => console.error('SW registration failed', e));
     }

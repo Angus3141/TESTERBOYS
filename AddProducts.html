@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Add Products</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0e6cfb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -49,8 +49,12 @@
   </style>
 </head>
 <body>
-  <h1>Add Products</h1>
-  <form id="singleForm" aria-label="Single Product Form">
+  <header class="app-header">
+    <a href="/index.html" class="back-button">‹</a>
+    <h1>Add Products</h1>
+  </header>
+  <main class="app-container">
+  <form id="singleForm" class="panel" aria-label="Single Product Form">
     <label>
       Name
       <input type="text" name="name" required>
@@ -66,7 +70,7 @@
     <button type="submit" id="singleSubmit">Add Product</button>
   </form>
 
-  <form id="bulkForm" aria-label="Bulk Product Form" style="margin-top:1rem;">
+  <form id="bulkForm" class="panel" aria-label="Bulk Product Form">
     <label>
       CSV File
       <input type="file" id="fileInput" accept=".csv">
@@ -77,6 +81,8 @@
     </label>
     <button type="button" id="bulkUpload">Upload Products</button>
   </form>
+  </main>
+
 
   <script type="module">
     import { app } from './firebase-config.js';
@@ -115,6 +121,11 @@
         }
       })));
       cb();
+
+    }
+
+    function sendProductEntries(entries, cb){
+      google.script.run.withSuccessHandler(cb).withFailureHandler(err => alert('Error: ' + err.message)).addProductListings(entries);
     }
 
     document.getElementById('singleForm').addEventListener('submit', e => {
@@ -177,7 +188,7 @@
       document.addEventListener('touchend', e => {
         if (e.changedTouches[0].screenX - startX > 80) {
           if (history.length > 1) history.back();
-          else location.href = '?page=index';
+          else location.href = '/index.html';
         }
       });
     });
@@ -187,7 +198,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('sw.js', { scope: './' })
+        .register('/sw.js', { scope: '/' })
         .then(() => console.log('Service Worker registered'))
         .catch(e => console.error('SW registration failed', e));
     }
