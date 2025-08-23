@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Add Products</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0e6cfb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Add Products">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    html, body { margin:0; padding:0; overflow:hidden; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      box-sizing: border-box;
+    }
+    form {
+      margin: 0 5px;
+      padding: 0.5rem;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    h1 { text-align: center; font-size: 1.5rem; margin: 0 0 0.5rem; }
+    label { font-size: 0.9rem; }
+    input, textarea {
+      font-size: 1rem;
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #singleSubmit { background: #007bff; color: #fff; }
+    #bulkUpload { background: #28a745; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>Add Products</h1>
+  <form id="singleForm" aria-label="Single Product Form">
+    <label>
+      Name
+      <input type="text" name="name" required>
+    </label>
+    <label>
+      Threshold
+      <input type="number" name="threshold" min="0" value="0" required>
+    </label>
+    <label>
+      Initial Stock
+      <input type="number" name="stockLeft" min="0" value="0">
+    </label>
+    <button type="submit" id="singleSubmit">Add Product</button>
+  </form>
+
+  <form id="bulkForm" aria-label="Bulk Product Form" style="margin-top:1rem;">
+    <label>
+      CSV File
+      <input type="file" id="fileInput" accept=".csv">
+    </label>
+    <label>
+      Or paste CSV data
+      <textarea id="csvText" rows="4" placeholder="name,threshold,stockLeft\nWidget,10,5"></textarea>
+    </label>
+    <button type="button" id="bulkUpload">Upload Products</button>
+  </form>
+
+  <script>
+    function sendEntries(entries, cb){
+      google.script.run.withSuccessHandler(cb).withFailureHandler(err => alert('Error: ' + err.message)).addProducts(entries);
+    }
+
+    document.getElementById('singleForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const form = e.target;
+      const entry = {
+        name: form.name.value.trim(),
+        threshold: parseInt(form.threshold.value,10)||0,
+        stockLeft: parseInt(form.stockLeft.value,10)||0
+      };
+      sendEntries([entry], () => {
+        alert('Product added!');
+        form.reset();
+      });
+    });
+
+    function parseCSV(text){
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines.shift().split(',').map(h=>h.trim().toLowerCase());
+      return lines.filter(Boolean).map(line => {
+        const cols = line.split(',');
+        const obj = {};
+        headers.forEach((h,i)=> obj[h]=cols[i]?cols[i].trim():'' );
+        return {
+          name: obj.name,
+          threshold: parseInt(obj.threshold,10)||0,
+          stockLeft: parseInt(obj.stockleft,10)||0
+        };
+      }).filter(e=>e.name);
+    }
+
+    document.getElementById('bulkUpload').addEventListener('click', () => {
+      const file = document.getElementById('fileInput').files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const entries = parseCSV(e.target.result);
+          if (entries.length) sendEntries(entries, () => alert('Products uploaded!'));
+          else alert('No valid rows found.');
+        };
+        reader.readAsText(file);
+      } else {
+        const text = document.getElementById('csvText').value;
+        const entries = parseCSV(text);
+        if (entries.length) sendEntries(entries, () => alert('Products uploaded!'));
+        else alert('No valid rows found.');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      let startX = 0;
+      document.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX);
+      document.addEventListener('touchend', e => {
+        if (e.changedTouches[0].screenX - startX > 80) {
+          if (history.length > 1) history.back();
+          else location.href = '?page=index';
+        }
+      });
+    });
+  </script>
+
+  <!-- Register service worker for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('sw.js', { scope: './' })
+        .then(() => console.log('Service Worker registered'))
+        .catch(e => console.error('SW registration failed', e));
+    }
+  </script>
+</body>
+</html>
