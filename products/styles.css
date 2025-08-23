@@ -32,6 +32,22 @@ body {
   padding: .75rem;
 }
 
+.search-bar {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+
+.search-bar input,
+.search-bar select {
+  flex: 1;
+  padding: .5rem;
+}
+
+.search-bar button {
+  padding: .5rem .75rem;
+}
+
 .product-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
