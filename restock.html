@@ -2,36 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta 
-    name="viewport" 
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Restock Alerts</title>
 
   <!-- PWA manifest & icons -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0e6cfb">
+  <meta name="theme-color" content="#007aff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Restock">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="ios.css">
 
   <style>
-    :root {
-      --bg: #f0f4f8;
-      --card-bg: #fff;
-      --text: #333;
-      --primary: #16a085;
-      --warn: #c0392b;
-      --shadow: rgba(0,0,0,0.1);
-    }
     html, body {
       margin: 0;
-      padding: env(safe-area-inset-top) env(safe-area-inset-right)
-               env(safe-area-inset-bottom) env(safe-area-inset-left);
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', Tahoma, sans-serif;
       overflow-x: hidden;
       position: relative;
     }
@@ -56,10 +41,7 @@
       margin: 0 1rem 2rem;
     }
     .card {
-      background: var(--card-bg);
-      border-radius: 8px;
       padding: 1rem;
-      box-shadow: 0 4px 8px var(--shadow);
       display: flex;
       flex-direction: column;
       justify-content: space-between;

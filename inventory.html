@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Inventory Manager</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0e6cfb">
+  <meta name="theme-color" content="#007aff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Inventory">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="ios.css">
   <style>
-    html, body { margin:0; padding:0; overflow:hidden; }
+    html, body { margin:0; overflow:hidden; }
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       box-sizing: border-box;
     }
@@ -23,7 +22,7 @@
       padding: 0.5rem;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
+      border-radius: var(--radius);
       display: flex;
       flex-direction: column;
       height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
@@ -41,7 +40,7 @@
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; inset: 0; background: #ccc; border-radius: 25px; transition: .4s; }
     .slider:before { position: absolute; content: ''; height: 21px; width: 21px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: .4s; }
-    input:checked + .slider { background: #28a745; }
+    input:checked + .slider { background: var(--success); }
     input:checked + .slider:before { transform: translateX(25px); }
     #actionText { font-size: 1rem; white-space: nowrap; }
 
@@ -49,17 +48,12 @@
     .stickerEntry { display: grid; grid-template-columns: 1fr auto auto; gap: 0.25rem; align-items: center; }
     select, .quantitySelect {
       font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      padding: 0.25rem;
       background: #fff;
       box-sizing: border-box;
-      appearance: none;
-      -webkit-appearance: none;
       min-width: 0;
     }
     .quantitySelect { width: 3rem; }
-    .removeRow { width: 1.5rem; padding: 0; background: transparent; font-size: 1rem; border: none; cursor: pointer; }
+    .removeRow { width: 1.5rem; padding: 0; background: transparent; border: none; cursor: pointer; color: inherit; }
 
     .buttonGroup {
       display: flex;
@@ -67,17 +61,10 @@
       gap: 0.5rem;
       margin-top: 0.5rem;
     }
-    .buttonGroup button {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #addRow { background: #28a745; color: #fff; }
-    #submitBtn { background: #007bff; color: #fff; }
-    #clearBtn { background: #dc3545; color: #fff; }
-    #submitBtn:disabled { background: #6c757d; cursor: not-allowed; }
+    .buttonGroup button { padding: 0.5rem; font-size: 1rem; }
+    #addRow { background: var(--success); color: #fff; }
+    #submitBtn { background: var(--primary); color: #fff; }
+    #clearBtn { background: var(--warn); color: #fff; }
   </style>
 </head>
 <body>
