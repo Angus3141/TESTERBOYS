@@ -51,8 +51,34 @@
 
   try {
     const snapshot = await db.collection('products').get();
+    const map = {};
     snapshot.forEach(doc => {
       const data = doc.data();
+      const key = data.title || doc.id;
+      if (!map[key]) {
+        map[key] = {
+          ...data,
+          variation: {
+            type: data.variation?.type || '',
+            name: data.variation?.name || '',
+            values: data.variation?.values ? [...data.variation.values] : []
+          }
+        };
+      } else {
+        const existing = map[key];
+        const v = data.variation;
+        if (v) {
+          existing.variation = existing.variation || { type: '', name: '', values: [] };
+          if (!existing.variation.type && v.type) existing.variation.type = v.type;
+          if (!existing.variation.name && v.name) existing.variation.name = v.name;
+          if (v.values && v.values.length) {
+            existing.variation.values = Array.from(new Set([...(existing.variation.values || []), ...v.values]));
+          }
+        }
+      }
+    });
+
+    Object.values(map).forEach(data => {
       const card = document.createElement('div');
       card.className = 'product-card';
       card.innerHTML = `<img src="${data.image1 || ''}" alt="${data.title || ''}"><h2>${data.title || ''}</h2>`;
