@@ -32,6 +32,14 @@
   }
 
   // CSV parser reused from AddProducts page
+  function normalizeParts(text) {
+    return (text || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => s.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+  }
+
   function parseCSV(text) {
     const clean = (text || '').replace(/^\uFEFF/, '').trim();
     if (!clean) return [];
@@ -52,17 +60,15 @@
         headers.forEach((h, i) => (obj[h] = cols[i] ?? ''));
 
         return {
-          title: obj.title,
-          description: obj.description,
+          title: normalizeParts(obj.title).join(', '),
+          description: normalizeParts(obj.description).join(', '),
           price: parseFloat(obj.price) || 0,
-          tags: obj.tags ? obj.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-          image1: obj.image1,
+          tags: normalizeParts(obj.tags),
+          image1: normalizeParts(obj.image1).join(', '),
           variation: {
-            type: obj['variation 1 type'] || '',
-            name: obj['variation 1 name'] || '',
-            values: obj['variation 1 values']
-              ? obj['variation 1 values'].split(',').map(v => v.trim()).filter(Boolean)
-              : [],
+            type: normalizeParts(obj['variation 1 type']).join(', '),
+            name: normalizeParts(obj['variation 1 name']).join(', '),
+            values: normalizeParts(obj['variation 1 values']),
           },
         };
       })
@@ -126,7 +132,8 @@
       btn.classList.add('active');
     });
   });
-  modeBtns[0]?.classList.add('active');
+  forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  // forms start hidden; show relevant form when a button is pressed
 
   const field = id => document.getElementById(id)?.value.trim();
 
@@ -162,7 +169,8 @@
     try {
       setStatus(rowStatus, '');
       const text = document.getElementById('rowText')?.value || '';
-      const csv = `TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\n${text}`;
+      const normalized = text.replace(/\t/g, ',');
+      const csv = `TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\n${normalized}`;
       const entries = parseCSV(csv);
       if (!entries.length) { alert('No valid rows found.'); return; }
       setStatus(rowStatus, 'Uploading to Firestore…');
