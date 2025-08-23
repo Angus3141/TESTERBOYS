@@ -13,6 +13,12 @@
   </header>
 
   <main class="app-container">
+    <div class="mode-buttons">
+      <button type="button" data-target="singleForm">Add single listing</button>
+      <button type="button" data-target="rowForm">Add Row</button>
+      <button type="button" data-target="csvForm">Add CSV</button>
+    </div>
+
     <!-- Individual product form -->
     <form id="singleForm" class="panel" aria-label="Single Product Form">
       <label>
@@ -51,14 +57,24 @@
       <div class="status" id="singleStatus" aria-live="polite"></div>
     </form>
 
-    <!-- Bulk add form -->
-    <form id="bulkForm" class="panel" aria-label="Bulk Product Form">
+    <!-- Add Row form -->
+    <form id="rowForm" class="panel hidden" aria-label="Bulk Product Form">
       <label>
         Paste CSV row
-        <textarea id="bulkText" rows="4" placeholder="TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES"></textarea>
+        <textarea id="rowText" rows="4" placeholder="TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES"></textarea>
       </label>
-      <button type="button" id="bulkUpload">Upload Products</button>
-      <div class="status" id="bulkStatus" aria-live="polite"></div>
+      <button type="button" id="rowUpload">Upload Products</button>
+      <div class="status" id="rowStatus" aria-live="polite"></div>
+    </form>
+
+    <!-- CSV upload form -->
+    <form id="csvForm" class="panel hidden" aria-label="CSV Upload Form">
+      <label>
+        CSV File
+        <input type="file" id="csvFile" accept=".csv" />
+      </label>
+      <button type="button" id="csvUpload">Upload Products</button>
+      <div class="status" id="csvStatus" aria-live="polite"></div>
     </form>
   </main>
 

@@ -108,11 +108,21 @@
   }
 
   blockFormSubmissions();
-
   const singleStatus = document.getElementById('singleStatus');
-  const bulkStatus   = document.getElementById('bulkStatus');
+  const rowStatus    = document.getElementById('rowStatus');
+  const csvStatus    = document.getElementById('csvStatus');
   const singleBtn    = document.getElementById('singleUpload');
-  const bulkBtn      = document.getElementById('bulkUpload');
+  const rowBtn       = document.getElementById('rowUpload');
+  const csvBtn       = document.getElementById('csvUpload');
+
+  // Toggle forms based on buttons
+  const forms = ['singleForm','rowForm','csvForm'];
+  document.querySelectorAll('.mode-buttons button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      forms.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+      document.getElementById(btn.dataset.target)?.classList.remove('hidden');
+    });
+  });
 
   const field = id => document.getElementById(id)?.value.trim();
 
@@ -144,21 +154,39 @@
     }
   });
 
-  bulkBtn?.addEventListener('click', async () => {
+  rowBtn?.addEventListener('click', async () => {
     try {
-      setStatus(bulkStatus, '');
-      const text = document.getElementById('bulkText')?.value || '';
+      setStatus(rowStatus, '');
+      const text = document.getElementById('rowText')?.value || '';
       const csv = `TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\n${text}`;
       const entries = parseCSV(csv);
       if (!entries.length) { alert('No valid rows found.'); return; }
-      setStatus(bulkStatus, 'Uploading to Firestore…');
+      setStatus(rowStatus, 'Uploading to Firestore…');
       await writeProducts(entries);
-      setStatus(bulkStatus, 'Products uploaded!');
-      document.getElementById('bulkForm')?.reset();
+      setStatus(rowStatus, 'Products uploaded!');
+      document.getElementById('rowForm')?.reset();
     } catch (e) {
       console.error(e);
       alert('Upload failed: ' + (e.message || e));
-      setStatus(bulkStatus, 'Upload failed.');
+      setStatus(rowStatus, 'Upload failed.');
+    }
+  });
+
+  csvBtn?.addEventListener('click', async () => {
+    try {
+      setStatus(csvStatus, '');
+      const file = document.getElementById('csvFile')?.files?.[0];
+      const csv = file ? await file.text() : '';
+      const entries = parseCSV(csv);
+      if (!entries.length) { alert('No valid rows found.'); return; }
+      setStatus(csvStatus, 'Uploading to Firestore…');
+      await writeProducts(entries);
+      setStatus(csvStatus, 'Products uploaded!');
+      document.getElementById('csvForm')?.reset();
+    } catch (e) {
+      console.error(e);
+      alert('Upload failed: ' + (e.message || e));
+      setStatus(csvStatus, 'Upload failed.');
     }
   });
 
