@@ -154,37 +154,10 @@ function processExpenses(user, entries) {
 }
 
 /**
- * Adds new products to the Inventory collection.
- * Each entry should contain: name, threshold, stockLeft.
- */
-function addProducts(entries) {
-  entries.forEach(entry => {
-    const stockLeft = Number(entry.stockLeft || 0);
-    const threshold = Number(entry.threshold || 0);
-    const payload = {
-      fields: {
-        name:      { stringValue: entry.name },
-        stockIn:   { integerValue: 0 },
-        stockOut:  { integerValue: 0 },
-        stockLeft: { integerValue: stockLeft },
-        threshold: { integerValue: threshold },
-        needs:     { booleanValue: stockLeft <= threshold }
-      }
-    };
-    UrlFetchApp.fetch(`${BASE_URL}/Inventory?documentId=${encodeURIComponent(entry.name)}`, {
-      method: 'POST',
-      contentType: 'application/json',
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true
-    });
-  });
-}
-
-/**
  * Adds product listings to Firestore "products" collection.
  * Each entry should contain: title, description, price, tags[], image1, variation{type,name,values[]}
  */
-function addProductListings(entries) {
+function addProducts(entries) {
   entries.forEach(entry => {
     const payload = {
       fields: {

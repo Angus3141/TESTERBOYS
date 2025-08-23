@@ -18,57 +18,35 @@
     <h1>Add Products</h1>
   </header>
   <main class="app-container">
-  <form id="singleForm" class="panel" aria-label="Single Product Form">
+  <form id="singleForm" class="panel" aria-label="Single Product CSV Form">
     <label>
-      Name
-      <input type="text" name="name" required>
+      CSV File
+      <input type="file" id="singleFile" accept=".csv">
     </label>
     <label>
-      Threshold
-      <input type="number" name="threshold" min="0" value="0" required>
+      Or paste CSV data
+      <textarea id="singleText" rows="4" placeholder="TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\nFishing Croc Charms,\"Sample description\",5.99,\"tag1,tag2\",https://example.com/image.jpg,Custom Property,Charm Type,\"value1,value2\""></textarea>
     </label>
-    <label>
-      Initial Stock
-      <input type="number" name="stockLeft" min="0" value="0">
-    </label>
-    <button type="submit" id="singleSubmit">Add Product</button>
+    <button type="button" id="singleUpload">Upload Product</button>
   </form>
 
   <form id="bulkForm" class="panel" aria-label="Bulk Product Form">
     <label>
       CSV File
-      <input type="file" id="fileInput" accept=".csv">
+      <input type="file" id="bulkFile" accept=".csv">
     </label>
     <label>
       Or paste CSV data
-      <textarea id="csvText" rows="4" placeholder="TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\nFishing Croc Charms,\"Sample description\",5.99,\"tag1,tag2\",https://example.com/image.jpg,Custom Property,Charm Type,\"value1,value2\""></textarea>
+      <textarea id="bulkText" rows="4" placeholder="TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES\nFishing Croc Charms,\"Sample description\",5.99,\"tag1,tag2\",https://example.com/image.jpg,Custom Property,Charm Type,\"value1,value2\""></textarea>
     </label>
     <button type="button" id="bulkUpload">Upload Products</button>
   </form>
   </main>
 
   <script>
-    function sendInventoryEntries(entries, cb){
+    function sendProductEntries(entries, cb){
       google.script.run.withSuccessHandler(cb).withFailureHandler(err => alert('Error: ' + err.message)).addProducts(entries);
     }
-
-    function sendProductEntries(entries, cb){
-      google.script.run.withSuccessHandler(cb).withFailureHandler(err => alert('Error: ' + err.message)).addProductListings(entries);
-    }
-
-    document.getElementById('singleForm').addEventListener('submit', e => {
-      e.preventDefault();
-      const form = e.target;
-      const entry = {
-        name: form.name.value.trim(),
-        threshold: parseInt(form.threshold.value,10)||0,
-        stockLeft: parseInt(form.stockLeft.value,10)||0
-      };
-      sendInventoryEntries([entry], () => {
-        alert('Product added!');
-        form.reset();
-      });
-    });
 
     function parseCSV(text){
       const lines = text.trim().split(/\r?\n/);
@@ -92,8 +70,32 @@
       }).filter(e=>e.title);
     }
 
+    document.getElementById('singleUpload').addEventListener('click', () => {
+      const file = document.getElementById('singleFile').files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const entries = parseCSV(e.target.result);
+          if (entries.length) sendProductEntries([entries[0]], () => {
+            alert('Product uploaded!');
+            document.getElementById('singleForm').reset();
+          });
+          else alert('No valid rows found.');
+        };
+        reader.readAsText(file);
+      } else {
+        const text = document.getElementById('singleText').value;
+        const entries = parseCSV(text);
+        if (entries.length) sendProductEntries([entries[0]], () => {
+          alert('Product uploaded!');
+          document.getElementById('singleForm').reset();
+        });
+        else alert('No valid rows found.');
+      }
+    });
+
     document.getElementById('bulkUpload').addEventListener('click', () => {
-      const file = document.getElementById('fileInput').files[0];
+      const file = document.getElementById('bulkFile').files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = e => {
@@ -103,7 +105,7 @@
         };
         reader.readAsText(file);
       } else {
-        const text = document.getElementById('csvText').value;
+        const text = document.getElementById('bulkText').value;
         const entries = parseCSV(text);
         if (entries.length) sendProductEntries(entries, () => alert('Products uploaded!'));
         else alert('No valid rows found.');
