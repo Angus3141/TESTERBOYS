@@ -216,6 +216,21 @@
   });
   </script>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let startX = 0;
+      document.addEventListener('touchstart', e => {
+        startX = e.changedTouches[0].screenX;
+      });
+      document.addEventListener('touchend', e => {
+        if (e.changedTouches[0].screenX - startX > 80) {
+          if (history.length > 1) history.back();
+          else location.href = '?page=index';
+        }
+      });
+    });
+  </script>
+
   <!-- Register service worker for PWA -->
   <script>
     if ('serviceWorker' in navigator) {
