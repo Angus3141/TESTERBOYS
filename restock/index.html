@@ -6,14 +6,14 @@
   <title>Restock Alerts</title>
 
   <!-- PWA manifest & icons -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="/root/manifest.json">
   <meta name="theme-color" content="#007aff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Restock">
   <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMBA3+AcqQAAAAASUVORK5CYII=">
-  <link rel="stylesheet" href="ios.css">
-  <script type="module" src="firebase-config.js"></script>
+  <link rel="stylesheet" href="/root/ios.css">
+  <script type="module" src="/root/firebase-config.js"></script>
 
 
   <style>
@@ -110,7 +110,7 @@
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
+        .register('/root/sw.js', { scope: '/root/' })
         .then(() => console.log('Service Worker registered'))
         .catch(e => console.error('SW registration failed', e));
     }

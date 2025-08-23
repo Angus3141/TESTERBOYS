@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Add Products</title>
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="/root/manifest.json">
+  <link rel="stylesheet" href="/root/ios.css">
+  <script type="module" src="/root/firebase-config.js"></script>
   <meta name="theme-color" content="#0e6cfb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -164,7 +166,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
+        .register('/root/sw.js', { scope: '/root/' })
         .then(() => console.log('Service Worker registered'))
         .catch(e => console.error('SW registration failed', e));
     }

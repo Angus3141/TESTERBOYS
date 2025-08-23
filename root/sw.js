@@ -1,9 +1,13 @@
 const CACHE_NAME = 'inventory-app-v1';
 const URLs_TO_CACHE = [
-  './',
-  './index.html',
-  './AddProducts.html',
-  './manifest.json'
+  '/index.html',
+  '/AddProducts/',
+  '/Expenses/',
+  '/inventory/',
+  '/restock/',
+  '/root/manifest.json',
+  '/root/ios.css',
+  '/root/firebase-config.js'
 ];
 
 self.addEventListener('install', evt => {
