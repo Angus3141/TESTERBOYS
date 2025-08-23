@@ -31,6 +31,9 @@ function doGet(e) {
     case 'restock':
       fileName = 'Restock';
       break;
+    case 'addproducts':
+      fileName = 'AddProducts';
+      break;
     default:
       fileName = 'Index';
   }
@@ -69,7 +72,8 @@ function doGet(e) {
     Index:     'Dashboard',
     Inventory: 'Inventory Manager',
     Expenses:  'Expenses Tracker',
-    Restock:   'Restock Alerts'
+    Restock:   'Restock Alerts',
+    AddProducts: 'Add Products'
   };
 
   return template.evaluate()
@@ -141,6 +145,33 @@ function processExpenses(user, entries) {
       }
     };
     UrlFetchApp.fetch(`${BASE_URL}/Expenses`, {
+      method: 'POST',
+      contentType: 'application/json',
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+  });
+}
+
+/**
+ * Adds new products to the Inventory collection.
+ * Each entry should contain: name, threshold, stockLeft.
+ */
+function addProducts(entries) {
+  entries.forEach(entry => {
+    const stockLeft = Number(entry.stockLeft || 0);
+    const threshold = Number(entry.threshold || 0);
+    const payload = {
+      fields: {
+        name:      { stringValue: entry.name },
+        stockIn:   { integerValue: 0 },
+        stockOut:  { integerValue: 0 },
+        stockLeft: { integerValue: stockLeft },
+        threshold: { integerValue: threshold },
+        needs:     { booleanValue: stockLeft <= threshold }
+      }
+    };
+    UrlFetchApp.fetch(`${BASE_URL}/Inventory?documentId=${encodeURIComponent(entry.name)}`, {
       method: 'POST',
       contentType: 'application/json',
       payload: JSON.stringify(payload),
