@@ -26,6 +26,11 @@
   const modalTags = document.getElementById('modalTags');
   const modalVariation = document.getElementById('modalVariation');
   const modalClose = document.getElementById('modalClose');
+  const searchInput = document.getElementById('searchInput');
+  const typeFilter = document.getElementById('typeFilter');
+  const searchButton = document.getElementById('searchButton');
+
+  let allProducts = [];
 
   function openModal(data) {
     modalImage.src = data.image1 || '';
@@ -46,8 +51,33 @@
     modal.setAttribute('hidden', '');
   }
 
+  function renderProducts(list) {
+    listEl.innerHTML = '';
+    list.forEach(data => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `<img src="${data.image1 || ''}" alt="${data.title || ''}"><h2>${data.title || ''}</h2>`;
+      card.addEventListener('click', () => openModal(data));
+      listEl.appendChild(card);
+    });
+  }
+
+  function applyFilters() {
+    const query = searchInput.value.toLowerCase();
+    const type = typeFilter.value;
+    const filtered = allProducts.filter(p => {
+      const matchesQuery = !query || (p.title && p.title.toLowerCase().includes(query));
+      const matchesType = !type || p.type === type;
+      return matchesQuery && matchesType;
+    });
+    renderProducts(filtered);
+  }
+
   modalClose.addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  searchInput.addEventListener('input', applyFilters);
+  typeFilter.addEventListener('change', applyFilters);
+  searchButton.addEventListener('click', applyFilters);
 
   try {
     const snapshot = await db.collection('products').get();
@@ -78,13 +108,16 @@
       }
     });
 
-    Object.values(map).forEach(data => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.innerHTML = `<img src="${data.image1 || ''}" alt="${data.title || ''}"><h2>${data.title || ''}</h2>`;
-      card.addEventListener('click', () => openModal(data));
-      listEl.appendChild(card);
+    allProducts = Object.values(map);
+    const types = Array.from(new Set(allProducts.map(p => p.type).filter(Boolean)));
+    types.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      typeFilter.appendChild(opt);
     });
+
+    renderProducts(allProducts);
   } catch (err) {
     console.error('Failed to load products:', err);
   }
