@@ -1,11 +1,9 @@
 const CACHE_NAME = 'inventory-app-v1';
 const URLs_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/AddProducts.html',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  './',
+  './index.html',
+  './AddProducts.html',
+  './manifest.json'
 ];
 
 self.addEventListener('install', evt => {
