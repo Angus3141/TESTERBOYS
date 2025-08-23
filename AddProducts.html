@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Add Products</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0e6cfb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Add Products">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <style>
     html, body { margin:0; padding:0; overflow:hidden; }
     body {
@@ -136,7 +136,7 @@
       document.addEventListener('touchend', e => {
         if (e.changedTouches[0].screenX - startX > 80) {
           if (history.length > 1) history.back();
-          else location.href = '?page=index';
+          else location.href = '/index.html';
         }
       });
     });
@@ -146,7 +146,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('sw.js', { scope: './' })
+        .register('/sw.js', { scope: '/' })
         .then(() => console.log('Service Worker registered'))
         .catch(e => console.error('SW registration failed', e));
     }
