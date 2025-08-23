@@ -1,119 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Restock Alerts</title>
-
-  <!-- PWA manifest & icons -->
-  <link rel="manifest" href="/root/manifest.json">
-  <meta name="theme-color" content="#007aff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Restock">
-  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMBA3+AcqQAAAAASUVORK5CYII=">
-  <link rel="stylesheet" href="/root/ios.css">
-  <script type="module" src="/root/firebase-config.js"></script>
-
-
-  <style>
-    .grid {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-    .card {
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 16px var(--shadow);
-    }
-    .card h2 {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
-      color: #34495e;
-    }
-    .info {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-    .label {
-      font-weight: 600;
-    }
-    .value {
-      color: var(--primary);
-    }
-    .threshold {
-      color: var(--warn);
-    }
-    .empty {
-      text-align: center;
-      font-size: 1rem;
-      color: #777;
-      margin-top: 2rem;
-    }
-  </style>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <header class="app-header">
-    <a href="/index.html" class="back-button">‹</a>
+    <a href="../index.html" class="back-button" aria-label="Back">‹</a>
     <h1>Restock Alerts</h1>
   </header>
   <main class="app-container">
-  <? if (alertItems && alertItems.length) { ?>
-    <div class="grid">
-        <? alertItems.forEach(item => { ?>
-          <div class="card">
-            <h2><?= item.name ?></h2>
-            <div class="info">
-              <span class="label">Left:</span>
-              <span class="value"><?= item.quantity ?></span>
-            </div>
-            <div class="info">
-              <span class="label">Threshold:</span>
-              <span class="threshold"><?= item.restock ?></span>
-            </div>
-            <div class="info">
-              <span class="label">Needs Restock?</span>
-              <span><?= item.needs ? 'Yes' : 'No' ?></span>
-            </div>
-          </div>
-        <? }); ?>
-    </div>
-  <? } else { ?>
-    <p class="empty">
+    <div id="alertGrid" class="grid" aria-live="polite"></div>
+    <p id="emptyMessage" class="empty" hidden>
       All stocked items are above threshold. No restock needed!
     </p>
-  <? } ?>
   </main>
 
-  <!-- Register service worker for PWA -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      let startX = 0;
-      document.addEventListener('touchstart', e => {
-        startX = e.changedTouches[0].screenX;
-      });
-      document.addEventListener('touchend', e => {
-        if (e.changedTouches[0].screenX - startX > 80) {
-          if (history.length > 1) history.back();
-          else location.href = '/index.html';
-        }
-      });
-    });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/root/sw.js', { scope: '/root/' })
-        .then(() => console.log('Service Worker registered'))
-        .catch(e => console.error('SW registration failed', e));
-    }
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
