@@ -11,43 +11,86 @@
   <meta name="apple-mobile-web-app-title" content="Inventory">
   <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMBA3+AcqQAAAAASUVORK5CYII=">
   <link rel="stylesheet" href="/root/ios.css">
-  <script type="module" src="/root/firebase-config.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <style>
-    .action-switch {
+    .action-toggle {
+      width: 100%;
+      font-size: 1.5rem;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+    .action-toggle.stock-out { background: var(--warn); }
+    .action-toggle.stock-in { background: var(--success); }
+
+    .controls {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: .75rem;
+    }
+    .controls input,
+    .controls select {
+      flex: 1;
+      padding: .5rem;
+    }
+
+    .product-grid {
+      display: grid;
+      gap: .5rem;
+    }
+    @media (max-width: 600px) {
+      .product-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 601px) {
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    }
+
+    .product-card {
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: .5rem;
+    }
+    .product-card img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+    }
+    .product-card h2 {
+      font-size: .9rem;
+      margin: .25rem 0;
+      text-align: center;
+    }
+    .quantity-control {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
+      gap: .25rem;
     }
-    .switch { position: relative; width: 50px; height: 25px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; inset: 0; background: #ccc; border-radius: 25px; transition: .4s; }
-    .slider:before { position: absolute; content: ''; height: 21px; width: 21px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: .4s; }
-    input:checked + .slider { background: var(--success); }
-    input:checked + .slider:before { transform: translateX(25px); }
-    #actionText { font-size: 1rem; white-space: nowrap; }
-
-    #stickerContainer { display: flex; flex-direction: column; gap: 0.25rem; }
-    .stickerEntry { display: grid; grid-template-columns: 1fr auto auto; gap: 0.25rem; align-items: center; }
-    select, .quantitySelect {
-      font-size: 1rem;
-      background: #fff;
-      box-sizing: border-box;
-      min-width: 0;
+    .quantity-control button {
+      width: 2rem;
+      height: 2rem;
+      font-size: 1.25rem;
     }
-    .quantitySelect { width: 3rem; }
-    .removeRow { width: 1.5rem; padding: 0; background: transparent; border: none; cursor: pointer; color: inherit; }
+    .quantity-control span {
+      min-width: 1.5rem;
+      text-align: center;
+    }
 
     .buttonGroup {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
     }
-    .buttonGroup button { padding: 0.5rem; font-size: 1rem; }
-    #addRow { background: var(--success); color: #fff; }
+    .buttonGroup button { padding: 0.75rem; font-size: 1rem; }
     #submitBtn { background: var(--primary); color: #fff; }
     #clearBtn { background: var(--warn); color: #fff; }
   </style>
@@ -58,158 +101,38 @@
     <h1>Inventory</h1>
   </header>
   <main class="app-container">
-  <form id="shipmentForm" class="panel" aria-label="Shipment Form">
-    <div class="action-switch">
-      <label class="switch">
-        <input type="checkbox" id="actionToggle">
-        <span class="slider"></span>
-      </label>
-      <span id="actionText">Stock Out</span>
-    </div>
-    <div id="stickerContainer" aria-live="polite"></div>
-    <div class="buttonGroup">
-      <button type="button" id="addRow">➕ Add Sticker</button>
-      <button type="submit" id="submitBtn">✅ Submit</button>
-      <button type="button" id="clearBtn">🧹 Clear</button>
-    </div>
-  </form>
+    <form id="inventoryForm" class="panel" aria-label="Inventory Form">
+      <button type="button" id="actionToggle" class="action-toggle stock-out">Stock Out</button>
+      <div class="controls">
+        <input type="search" id="searchInput" placeholder="Filter products...">
+        <select id="typeFilter">
+          <option value="">All Types</option>
+        </select>
+        <select id="sortSelect">
+          <option value="az">A–Z</option>
+          <option value="za">Z–A</option>
+        </select>
+      </div>
+      <div id="productGrid" class="product-grid" aria-live="polite"></div>
+      <div class="buttonGroup">
+        <button type="submit" id="submitBtn">✅ Submit</button>
+        <button type="button" id="clearBtn">🧹 Clear</button>
+      </div>
+    </form>
   </main>
 
-  <template id="stickerEntryTemplate">
-    <div class="stickerEntry">
-      <select name="sticker" required aria-label="Sticker selection">
-        <? for (let i = 0; i < stickers.length; i++) { ?>
-          <option value="<?= stickers[i] ?>"><?= stickers[i] ?></option>
-        <? } ?>
-      </select>
-      <select name="quantity" class="quantitySelect" required aria-label="Quantity selector">
-        <? for (let q = 1; q <= 100; q++) { ?>
-          <option value="<?= q ?>"><?= q ?></option>
-        <? } ?>
-      </select>
-      <button type="button" class="removeRow" aria-label="Remove Sticker Row">✖️</button>
-    </div>
-  </template>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const STORAGE_KEY = 'inventoryFormState';
-      const container = document.getElementById('stickerContainer');
-      const tpl = document.getElementById('stickerEntryTemplate').content;
-      const actionToggle = document.getElementById('actionToggle');
-      const actionText = document.getElementById('actionText');
-      const addBtn = document.getElementById('addRow');
-      const submitBtn = document.getElementById('submitBtn');
-      const clearBtn = document.getElementById('clearBtn');
-
-      function saveState() {
-        const entries = Array.from(container.querySelectorAll('.stickerEntry')).map(entry => ({
-          sticker: entry.querySelector('select[name="sticker"]').value,
-          quantity: entry.querySelector('select[name="quantity"]').value
-        }));
-        const state = {
-          actionIn: actionToggle.checked,
-          entries,
-          submitDisabled: submitBtn.disabled
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }
-
-      function addEntry(data = {}) {
-        const clone = document.importNode(tpl, true);
-        const select = clone.querySelector('select[name="sticker"]');
-        const qty = clone.querySelector('select[name="quantity"]');
-        const rm = clone.querySelector('.removeRow');
-
-        if (data.sticker) select.value = data.sticker;
-        if (data.quantity) qty.value = data.quantity;
-
-        select.addEventListener('change', saveState);
-        qty.addEventListener('change', saveState);
-        rm.addEventListener('click', () => {
-          clone.remove();
-          if (!container.querySelector('.stickerEntry')) addEntry();
-          saveState();
-        });
-
-        container.appendChild(clone);
-        saveState();
-      }
-
-      function loadState() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          try {
-            const { actionIn, entries, submitDisabled } = JSON.parse(raw);
-            actionToggle.checked = actionIn;
-            actionText.textContent = actionIn ? 'Stock In' : 'Stock Out';
-            container.innerHTML = '';
-            entries.length ? entries.forEach(addEntry) : addEntry();
-            submitBtn.disabled = submitDisabled;
-          } catch {
-            container.innerHTML = '';
-            addEntry();
-          }
-        } else addEntry();
-      }
-
-      actionToggle.addEventListener('change', () => {
-        actionText.textContent = actionToggle.checked ? 'Stock In' : 'Stock Out';
-        saveState();
-      });
-
-      addBtn.addEventListener('click', () => addEntry());
-      clearBtn.addEventListener('click', () => {
-        localStorage.removeItem(STORAGE_KEY);
-        actionToggle.checked = false;
-        actionText.textContent = 'Stock Out';
-        submitBtn.disabled = false;
-        container.innerHTML = '';
-        addEntry();
-      });
-
-      loadState();
-
-  document.getElementById('shipmentForm').addEventListener('submit', e => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        saveState();
-        const actionType = actionToggle.checked ? 'in' : 'out';
-        const entries = Array.from(container.querySelectorAll('.stickerEntry')).map(entry => ({
-          sticker: entry.querySelector('select[name="sticker"]').value,
-          quantity: parseInt(entry.querySelector('select[name="quantity"]').value, 10)
-        }));
-        google.script.run
-          .withSuccessHandler(() => {
-            alert('Inventory updated!');
-            submitBtn.disabled = false;
-          })
-          .withFailureHandler(err => {
-            alert('Error: ' + err.message);
-            submitBtn.disabled = false;
-          })
-      .processInventoryAction(actionType, entries);
-    });
-  });
-  </script>
-
+  <script src="./app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let startX = 0;
-      document.addEventListener('touchstart', e => {
-        startX = e.changedTouches[0].screenX;
-      });
+      document.addEventListener('touchstart', e => { startX = e.changedTouches[0].screenX; });
       document.addEventListener('touchend', e => {
         if (e.changedTouches[0].screenX - startX > 80) {
-          if (history.length > 1) history.back();
-          else location.href = '/index.html';
+          if (history.length > 1) history.back(); else location.href = '/index.html';
         }
       });
     });
-  </script>
 
-  <!-- Register service worker for PWA -->
-  <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/root/sw.js', { scope: '/root/' })
