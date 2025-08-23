@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Add New Product</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <a href="../index.html" class="back-button" aria-label="Back">‹</a>
+    <h1>Add New Product</h1>
+  </header>
+
+  <main class="app-container">
+    <!-- Individual product form -->
+    <form id="singleForm" class="panel" aria-label="Single Product Form">
+      <label>
+        Title
+        <input type="text" id="title" />
+      </label>
+      <label>
+        Description
+        <textarea id="description" rows="3"></textarea>
+      </label>
+      <label>
+        Price
+        <input type="number" id="price" step="0.01" />
+      </label>
+      <label>
+        Tags
+        <input type="text" id="tags" placeholder="tag1,tag2" />
+      </label>
+      <label>
+        Image1
+        <input type="text" id="image1" />
+      </label>
+      <label>
+        Variation 1 Type
+        <input type="text" id="varType" />
+      </label>
+      <label>
+        Variation 1 Name
+        <input type="text" id="varName" />
+      </label>
+      <label>
+        Variation 1 Values
+        <input type="text" id="varValues" placeholder="value1,value2" />
+      </label>
+      <button type="button" id="singleUpload">Upload Product</button>
+      <div class="status" id="singleStatus" aria-live="polite"></div>
+    </form>
+
+    <!-- Bulk add form -->
+    <form id="bulkForm" class="panel" aria-label="Bulk Product Form">
+      <label>
+        Paste CSV row
+        <textarea id="bulkText" rows="4" placeholder="TITLE,DESCRIPTION,PRICE,TAGS,IMAGE1,VARIATION 1 TYPE,VARIATION 1 NAME,VARIATION 1 VALUES"></textarea>
+      </label>
+      <button type="button" id="bulkUpload">Upload Products</button>
+      <div class="status" id="bulkStatus" aria-live="polite"></div>
+    </form>
+  </main>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script src="./app.js"></script>
+</body>
+</html>
