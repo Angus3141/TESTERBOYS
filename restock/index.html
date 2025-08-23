@@ -68,23 +68,23 @@
   <main class="app-container">
   <? if (alertItems && alertItems.length) { ?>
     <div class="grid">
-      <? alertItems.forEach(item => { ?>
-        <div class="card">
-          <h2><?= item.name ?></h2>
-          <div class="info">
-            <span class="label">Left:</span>
-            <span class="value"><?= item.stockLeft ?></span>
+        <? alertItems.forEach(item => { ?>
+          <div class="card">
+            <h2><?= item.name ?></h2>
+            <div class="info">
+              <span class="label">Left:</span>
+              <span class="value"><?= item.quantity ?></span>
+            </div>
+            <div class="info">
+              <span class="label">Threshold:</span>
+              <span class="threshold"><?= item.restock ?></span>
+            </div>
+            <div class="info">
+              <span class="label">Needs Restock?</span>
+              <span><?= item.needs ? 'Yes' : 'No' ?></span>
+            </div>
           </div>
-          <div class="info">
-            <span class="label">Threshold:</span>
-            <span class="threshold"><?= item.threshold ?></span>
-          </div>
-          <div class="info">
-            <span class="label">Needs Restock?</span>
-            <span><?= item.needs ? 'Yes' : 'No' ?></span>
-          </div>
-        </div>
-      <? }); ?>
+        <? }); ?>
     </div>
   <? } else { ?>
     <p class="empty">

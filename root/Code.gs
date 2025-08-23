@@ -47,19 +47,35 @@ function doGet(e) {
       .filter(String);
 
   } else if (fileName === 'Restock') {
-    const docs = fetchCollection('Inventory');
+    const docs = fetchCollection('products');
     const rows = docs.map(d => {
       const f = d.fields || {};
+      const quantity = Number(
+        f.Quantity?.integerValue ||
+        f.Quantity?.doubleValue ||
+        f.quantity?.integerValue ||
+        f.quantity?.doubleValue ||
+        0
+      );
+      const restock = Number(
+        f.restock?.integerValue ||
+        f.restock?.doubleValue ||
+        f.Restock?.integerValue ||
+        f.Restock?.doubleValue ||
+        0
+      );
+      const name =
+        f.title?.stringValue ||
+        f.name?.stringValue ||
+        '';
       return {
-        name:      f.name?.stringValue || '',
-        stockIn:   Number(f.stockIn?.integerValue || 0),
-        stockOut:  Number(f.stockOut?.integerValue || 0),
-        stockLeft: Number(f.stockLeft?.integerValue || 0),
-        threshold: Number(f.threshold?.integerValue || 0),
-        needs:     Boolean(f.needs?.booleanValue)
+        name,
+        quantity,
+        restock,
+        needs: quantity <= restock
       };
     });
-    template.alertItems = rows.filter(item => item.needs || item.stockLeft <= item.threshold);
+    template.alertItems = rows.filter(item => item.needs);
 
   } else if (fileName === 'Inventory') {
     const docs = fetchCollection('Inventory');
