@@ -20,7 +20,6 @@
   const grid = document.getElementById('productGrid');
   const searchInput = document.getElementById('searchInput');
   const typeFilter = document.getElementById('typeFilter');
-  const sortSelect = document.getElementById('sortSelect');
   const actionToggle = document.getElementById('actionToggle');
   const submitBtn = document.getElementById('submitBtn');
   const clearBtn = document.getElementById('clearBtn');
@@ -62,11 +61,10 @@
 
       card.innerHTML = `
         <img src="${p.image1 || ''}" alt="${p.title || ''}">
-        <h2>${p.title || ''}</h2>
         <div class="quantity-control">
-          <button type="button" class="down">-</button>
+          <button type="button" class="up">^</button>
           <span class="qty">${quantities[p.id] || 0}</span>
-          <button type="button" class="up">+</button>
+          <button type="button" class="down">⌄</button>
         </div>
       `;
 
@@ -101,10 +99,7 @@
     if (type) {
       list = list.filter(p => p.type === type);
     }
-    const sort = sortSelect.value;
-    list.sort((a, b) =>
-      sort === 'za' ? (b.title || '').localeCompare(a.title || '') : (a.title || '').localeCompare(b.title || '')
-    );
+    list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     render(list);
   }
 
@@ -117,7 +112,6 @@
 
   searchInput.addEventListener('input', applyFilters);
   typeFilter.addEventListener('change', applyFilters);
-  sortSelect.addEventListener('change', applyFilters);
 
   submitBtn.addEventListener('click', e => {
     e.preventDefault();
